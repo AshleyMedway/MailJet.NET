@@ -78,9 +78,21 @@ namespace MailJet.Client
             return data;
         }
 
-        public MessageResponse GetMessages()
+        public MessageHistoryResponse GetMessage(long MessageId)
+        {
+            var request = new RestRequest("REST/messagehistory/{id}", Method.GET);
+            request.AddParameter("id", MessageId);
+            var result = WebClient.Execute(request);
+            var data = JsonConvert.DeserializeObject<MessageHistoryResponse>(result.Content);
+            return data;
+        }
+
+        public MessageResponse GetMessages(int? Limit = null)
         {
             var request = new RestRequest("REST/message", Method.GET);
+            if (Limit.HasValue)
+                request.AddParameter("limit", Limit.Value);
+
             var result = WebClient.Execute(request);
             var data = JsonConvert.DeserializeObject<MessageResponse>(result.Content);
             return data;

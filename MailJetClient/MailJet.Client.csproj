@@ -46,8 +46,10 @@
     <Compile Include="MailJetClient.cs" />
     <Compile Include="Response\BaseResponse.cs" />
     <Compile Include="Response\Data\DataItem.cs" />
+    <Compile Include="Response\Data\MessageHistoryData.cs" />
     <Compile Include="Response\Data\MessageData.cs" />
     <Compile Include="Enum\MessageStatus.cs" />
+    <Compile Include="Response\MessageHistoryResponse.cs" />
     <Compile Include="Response\MessageResponse.cs" />
     <Compile Include="Response\SendResponse.cs" />
   </ItemGroup>
