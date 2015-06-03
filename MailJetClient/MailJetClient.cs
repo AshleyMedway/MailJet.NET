@@ -1,4 +1,6 @@
-﻿using RestSharp;
+﻿using MailJet.Client.Response;
+using Newtonsoft.Json;
+using RestSharp;
 using System;
 using System.Linq;
 using System.Net;
@@ -17,7 +19,7 @@ namespace MailJet.Client
             _privateKey = PrivateKey;
         }
 
-        public bool SendMessage(MailMessage Message)
+        public SendResponse SendMessage(MailMessage Message)
         {
             var request = new RestRequest("send/message", Method.POST);
 
@@ -68,7 +70,12 @@ namespace MailJet.Client
                 throw new NotImplementedException("Sender Address not yet supported.");
 
             var response = WebClient.Execute(request);
-            return response.StatusCode == HttpStatusCode.OK;
+
+            if(response.StatusCode != HttpStatusCode.OK)
+                throw response.ErrorException;
+
+            var data = JsonConvert.DeserializeObject<SendResponse>(response.Content);
+            return data;
         }
 
         private RestClient WebClient
