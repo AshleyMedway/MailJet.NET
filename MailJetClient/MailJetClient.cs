@@ -29,8 +29,24 @@ namespace MailJet.Client
 				data.Add(new KeyValuePair<string, string>("from", Message.From.Address));
 				data.Add(new KeyValuePair<string, string>("subject", Message.Subject));
 
+				var recipientsCount = Message.To.Count;
+				recipientsCount += Message.CC.Count;
+				recipientsCount += Message.Bcc.Count;
+
+				if (recipientsCount == 0)
+					throw new InvalidOperationException("Must have at least one recipient. http://dev.mailjet.com/guides/send-api-guide/");
+
+				if (recipientsCount > 50)
+					throw new InvalidOperationException("Max Recipients is 50. http://dev.mailjet.com/guides/send-api-guide/");
+
 				foreach (var address in Message.To)
 					data.Add(new KeyValuePair<string, string>("to", address.Address));
+
+				foreach (var address in Message.CC)
+					data.Add(new KeyValuePair<string, string>("cc", address.Address));
+
+				foreach (var address in Message.Bcc)
+					data.Add(new KeyValuePair<string, string>("bcc", address.Address));
 
 				if (Message.IsBodyHtml)
 					data.Add(new KeyValuePair<string, string>("html", Message.Body));
@@ -38,7 +54,10 @@ namespace MailJet.Client
 					data.Add(new KeyValuePair<string, string>("text", Message.Body));
 
 				if (Message.Attachments.Any())
-					throw new InvalidOperationException("Attachments not yet supported.");
+					throw new NotImplementedException("Attachments not yet supported.");
+
+				if (!String.IsNullOrWhiteSpace (Message.Sender.Address))
+					throw new NotImplementedException("Sender Address not yet supported.");
 
 				var content = new FormUrlEncodedContent(data);
 				var task = client.PostAsync("https://api.mailjet.com/v3/send/message", content);
