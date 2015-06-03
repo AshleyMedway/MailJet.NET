@@ -56,7 +56,7 @@ namespace MailJet.Client
                 if (Message.Attachments.Any())
                     throw new NotImplementedException("Attachments not yet supported.");
 
-                if (!String.IsNullOrWhiteSpace(Message.Sender.Address))
+                if (Message.Sender != null && !String.IsNullOrWhiteSpace(Message.Sender.Address))
                     throw new NotImplementedException("Sender Address not yet supported.");
 
                 var content = new FormUrlEncodedContent(data);
