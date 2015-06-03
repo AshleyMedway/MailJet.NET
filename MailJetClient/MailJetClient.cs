@@ -20,18 +20,26 @@ namespace MailJet.Client
         public bool SendMessage(MailMessage Message)
         {
             var request = new RestRequest("send/message", Method.POST);
-            request.AddParameter("from", Message.From.Address);
-            request.AddParameter("subject", Message.Subject);
 
-            var recipientsCount = Message.To.Count;
-            recipientsCount += Message.CC.Count;
-            recipientsCount += Message.Bcc.Count;
+            if (Message.From == null)
+                throw new InvalidOperationException("You must specify the from address. http://dev.mailjet.com/guides/send-api-guide/");
+
+            if (String.IsNullOrWhiteSpace(Message.Subject))
+                throw new InvalidOperationException("You must specify the subject address. http://dev.mailjet.com/guides/send-api-guide/");
+
+            if(Message.Subject.Length > 255)
+                throw new InvalidOperationException("The subject cannot be longer than 255 characters. http://dev.mailjet.com/guides/send-api-guide/");
+
+            var recipientsCount = Message.To.Count + Message.CC.Count + Message.Bcc.Count;
 
             if (recipientsCount == 0)
                 throw new InvalidOperationException("Must have at least one recipient. http://dev.mailjet.com/guides/send-api-guide/");
 
             if (recipientsCount > 50)
                 throw new InvalidOperationException("Max Recipients is 50. http://dev.mailjet.com/guides/send-api-guide/");
+
+            request.AddParameter("from", Message.From.Address);
+            request.AddParameter("subject", Message.Subject);
 
             foreach (var address in Message.To)
                 request.AddParameter("to", address.Address);
