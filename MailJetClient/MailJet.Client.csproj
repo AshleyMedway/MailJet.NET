@@ -44,7 +44,11 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MailJetClient.cs" />
-    <Compile Include="Response\DataItem.cs" />
+    <Compile Include="Response\BaseResponse.cs" />
+    <Compile Include="Response\Data\DataItem.cs" />
+    <Compile Include="Response\Data\MessageData.cs" />
+    <Compile Include="Enum\MessageStatus.cs" />
+    <Compile Include="Response\MessageResponse.cs" />
     <Compile Include="Response\SendResponse.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

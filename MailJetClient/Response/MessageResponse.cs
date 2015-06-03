@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace MailJet.Client.Response
 {
-    public class SendResponse : BaseResponse
+    public class MessageResponse : BaseResponse
     {
-        public List<DataItem> Data { get; set; }
+        public List<MessageData> Data { get; set; }
     }
 }

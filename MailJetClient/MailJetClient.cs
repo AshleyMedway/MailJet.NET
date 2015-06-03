@@ -78,6 +78,14 @@ namespace MailJet.Client
             return data;
         }
 
+        public MessageResponse GetMessages()
+        {
+            var request = new RestRequest("REST/message", Method.GET);
+            var result = WebClient.Execute(request);
+            var data = JsonConvert.DeserializeObject<MessageResponse>(result.Content);
+            return data;
+        }
+
         private RestClient WebClient
         {
             get
