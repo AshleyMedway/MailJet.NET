@@ -13,7 +13,15 @@ namespace MailJet.Client.Tests
         [SetUp]
         public void Setup()
         {
-            _client = new MailJetClient("xxx", "xxx");
+            var publicKey = Environment.GetEnvironmentVariable("MailJetPub", EnvironmentVariableTarget.User);
+            var privateKey = Environment.GetEnvironmentVariable("MailJetPri", EnvironmentVariableTarget.User);
+
+            if (String.IsNullOrWhiteSpace(publicKey))
+                throw new InvalidOperationException("Add your MailJet public API Key to the Environment Variable \"MailJetPub\".");
+            if (String.IsNullOrWhiteSpace(privateKey))
+
+                throw new InvalidOperationException("Add your MailJet private API Key to the Environment Variable \"MailJetPri\".");
+            _client = new MailJetClient(publicKey, privateKey);
         }
 
         [Test]
@@ -51,12 +59,15 @@ namespace MailJet.Client.Tests
 
         private MailMessage BaseMessage()
         {
+            var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom", EnvironmentVariableTarget.User);
+            var testTo = Environment.GetEnvironmentVariable("MailJetTestTo", EnvironmentVariableTarget.User);
+
             var message = new MailMessage()
             {
-                From = new MailAddress("myemail@mydomain.com"),
+                From = new MailAddress(testFrom),
                 Subject = "test"
             };
-            message.To.Add(new MailAddress("anotheremail@mydomain.com"));
+            message.To.Add(new MailAddress(testTo));
             return message;
         }
     }
