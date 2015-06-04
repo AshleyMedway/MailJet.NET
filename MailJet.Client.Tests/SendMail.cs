@@ -13,8 +13,8 @@ namespace MailJet.Client.Tests
         [SetUp]
         public void Setup()
         {
-            var publicKey = Environment.GetEnvironmentVariable("MailJetPub", EnvironmentVariableTarget.Machine);
-            var privateKey = Environment.GetEnvironmentVariable("MailJetPri", EnvironmentVariableTarget.Machine);
+            var publicKey = Environment.GetEnvironmentVariable("MailJetPub");
+            var privateKey = Environment.GetEnvironmentVariable("MailJetPri");
 
             if (String.IsNullOrWhiteSpace(publicKey))
                 throw new InvalidOperationException("Add your MailJet public API Key to the Environment Variable \"MailJetPub\".");
@@ -59,8 +59,8 @@ namespace MailJet.Client.Tests
 
         private MailMessage BaseMessage()
         {
-            var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom", EnvironmentVariableTarget.Machine);
-            var testTo = Environment.GetEnvironmentVariable("MailJetTestTo", EnvironmentVariableTarget.Machine);
+            var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom");
+            var testTo = Environment.GetEnvironmentVariable("MailJetTestTo");
 
             var message = new MailMessage()
             {

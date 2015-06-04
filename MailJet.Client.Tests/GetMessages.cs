@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 using System.Linq;
 
 namespace MailJet.Client.Tests
@@ -11,7 +12,15 @@ namespace MailJet.Client.Tests
         [SetUp]
         public void Setup()
         {
-            _client = new MailJetClient("xxx", "xxx");
+            var publicKey = Environment.GetEnvironmentVariable("MailJetPub");
+            var privateKey = Environment.GetEnvironmentVariable("MailJetPri");
+
+            if (String.IsNullOrWhiteSpace(publicKey))
+                throw new InvalidOperationException("Add your MailJet public API Key to the Environment Variable \"MailJetPub\".");
+            if (String.IsNullOrWhiteSpace(privateKey))
+
+                throw new InvalidOperationException("Add your MailJet private API Key to the Environment Variable \"MailJetPri\".");
+            _client = new MailJetClient(publicKey, privateKey);
         }
 
         [Test]
