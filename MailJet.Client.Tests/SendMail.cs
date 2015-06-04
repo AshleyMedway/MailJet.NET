@@ -40,6 +40,26 @@ namespace MailJet.Client.Tests
         }
 
         [Test]
+        public void MailMessage_Text_WithDisplayName()
+        {
+            var message = new MailMessage();
+#if DEBUG
+            var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom", EnvironmentVariableTarget.User);
+            var testTo = Environment.GetEnvironmentVariable("MailJetTestTo", EnvironmentVariableTarget.User);
+#else
+            var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom");
+            var testTo = Environment.GetEnvironmentVariable("MailJetTestTo");
+#endif
+            message.To.Add(new MailAddress(testTo, "To Test"));
+            message.From = new MailAddress(testFrom, "To From");
+            message.Subject = "test";
+            message.Body = "test";
+            var result = _client.SendMessage(message);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count);
+        }
+
+        [Test]
         public void MailMessage_Text_WithAttachements()
         {
             var message = BaseMessage();

@@ -29,7 +29,7 @@ namespace MailJet.Client
             if (String.IsNullOrWhiteSpace(Message.Subject))
                 throw new InvalidOperationException("You must specify the subject address. http://dev.mailjet.com/guides/send-api-guide/");
 
-            if(Message.Subject.Length > 255)
+            if (Message.Subject.Length > 255)
                 throw new InvalidOperationException("The subject cannot be longer than 255 characters. http://dev.mailjet.com/guides/send-api-guide/");
 
             var recipientsCount = Message.To.Count + Message.CC.Count + Message.Bcc.Count;
@@ -40,17 +40,36 @@ namespace MailJet.Client
             if (recipientsCount > 50)
                 throw new InvalidOperationException("Max Recipients is 50. http://dev.mailjet.com/guides/send-api-guide/");
 
-            request.AddParameter("from", Message.From.Address);
+            if (String.IsNullOrWhiteSpace(Message.From.DisplayName))
+                request.AddParameter("from", Message.From.Address);
+            else
+                request.AddParameter("from", String.Format("{0} <{1}>", Message.From.DisplayName, Message.From.Address));
+
             request.AddParameter("subject", Message.Subject);
 
             foreach (var address in Message.To)
-                request.AddParameter("to", address.Address);
+            {
+                if (String.IsNullOrWhiteSpace(address.DisplayName))
+                    request.AddParameter("to", address.Address);
+                else
+                    request.AddParameter("to", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+            }
 
             foreach (var address in Message.CC)
-                request.AddParameter("cc", address.Address);
+            {
+                if (String.IsNullOrWhiteSpace(address.DisplayName))
+                    request.AddParameter("cc", address.Address);
+                else
+                    request.AddParameter("cc", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+            }
 
             foreach (var address in Message.Bcc)
-                request.AddParameter("bcc", address.Address);
+            {
+                if (String.IsNullOrWhiteSpace(address.DisplayName))
+                    request.AddParameter("bcc", address.Address);
+                else
+                    request.AddParameter("bcc", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+            }
 
             if (Message.IsBodyHtml)
                 request.AddParameter("html", Message.Body);
@@ -61,7 +80,7 @@ namespace MailJet.Client
             {
                 if (Message.Attachments.Sum(x => x.ContentStream.Length) > 15000000)
                     throw new InvalidOperationException("Attachments cannot exceed 15MB. http://dev.mailjet.com/guides/send-api-guide/");
-               
+
                 foreach (var item in Message.Attachments)
                     request.AddFile("attachment", x => item.ContentStream.CopyTo(x), item.Name);
             }
@@ -71,7 +90,7 @@ namespace MailJet.Client
 
             var response = WebClient.Execute(request);
 
-            if(response.StatusCode != HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
                 throw response.ErrorException;
 
             var data = JsonConvert.DeserializeObject<SendResponse>(response.Content);
