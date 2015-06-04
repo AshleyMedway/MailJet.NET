@@ -12,8 +12,13 @@ namespace MailJet.Client.Tests
         [SetUp]
         public void Setup()
         {
+#if DEBUG
+            var publicKey = Environment.GetEnvironmentVariable("MailJetPub", EnvironmentVariableTarget.User);
+            var privateKey = Environment.GetEnvironmentVariable("MailJetPri", EnvironmentVariableTarget.User);
+#else
             var publicKey = Environment.GetEnvironmentVariable("MailJetPub");
             var privateKey = Environment.GetEnvironmentVariable("MailJetPri");
+#endif
 
             if (String.IsNullOrWhiteSpace(publicKey))
                 throw new InvalidOperationException("Add your MailJet public API Key to the Environment Variable \"MailJetPub\".");
@@ -37,6 +42,16 @@ namespace MailJet.Client.Tests
         public void GetMessages_Test()
         {
             var result = _client.GetMessages();
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+        }
+
+        [Test]
+        public void GetMessageHistory_Test()
+        {
+            var message = _client.GetMessages().Data.First();
+            var result = _client.GetMessage(message.ID);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
