@@ -23,7 +23,6 @@ namespace MailJet.Client
         public SendResponse SendMessage(MailMessage Message)
         {
             var request = new RestRequest("send/message", Method.POST);
-            request.RequestFormat = DataFormat.Json;
 
             if (Message.From == null)
                 throw new InvalidOperationException("You must specify the from address. http://dev.mailjet.com/guides/send-api-guide/");
@@ -93,7 +92,11 @@ namespace MailJet.Client
             {
                 foreach (var item in view.LinkedResources)
                 {
-                    request.AddFile("inlineattachment", ((MemoryStream)item.ContentStream).ToArray(), item.ContentId, item.ContentType.MediaType);
+                    using (var ms = new MemoryStream())
+                    {
+                        item.ContentStream.CopyTo(ms);
+                        request.AddFile("inlineattachment", ms.ToArray(), item.ContentId, item.ContentType.MediaType);
+                    }
                 }
             }
 
