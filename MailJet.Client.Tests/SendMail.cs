@@ -1,7 +1,11 @@
-﻿using NUnit.Framework;
+﻿using MailJet.Client.Response;
+using NUnit.Framework;
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Net.Mail;
+using System.Net.Mime;
 
 namespace MailJet.Client.Tests
 {
@@ -27,6 +31,33 @@ namespace MailJet.Client.Tests
 
                 throw new InvalidOperationException("Add your MailJet private API Key to the Environment Variable \"MailJetPri\".");
             _client = new MailJetClient(publicKey, privateKey);
+        }
+
+        [Test]
+        public void MailMessage_Html_WithInlineAttachements()
+        {
+            var message = BaseMessage();
+            var body = "<img src=\"cid:test.jpg\">TEST</b>";
+            message.Body = body;
+            message.IsBodyHtml = true;
+            var view = AlternateView.CreateAlternateViewFromString(body, null, MediaTypeNames.Text.Html);
+            SendResponse result;
+            using (var bmp = new Bitmap(128, 128))
+            {
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    using (var s = new MemoryStream())
+                    {
+                        g.Clear(Color.Black);
+                        bmp.Save(s, ImageFormat.Jpeg);
+                        view.LinkedResources.Add(new LinkedResource(s, MediaTypeNames.Image.Jpeg) { ContentId = "test.jpg" });
+                        message.AlternateViews.Add(view);
+                        result = _client.SendMessage(message);
+                    }
+                }
+            }
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count);
         }
 
         [Test]

@@ -85,6 +85,14 @@ namespace MailJet.Client
                     request.AddFile("attachment", x => item.ContentStream.CopyTo(x), item.Name);
             }
 
+            var view = Message.AlternateViews.FirstOrDefault();
+
+            if (view != null && view.LinkedResources != null && view.LinkedResources.Any())
+            {
+                foreach (var item in view.LinkedResources)
+                    request.AddFile("inline_attachments", x => item.ContentStream.CopyTo(x), item.ContentId);
+            }
+
             if (Message.Sender != null && !String.IsNullOrWhiteSpace(Message.Sender.Address))
                 throw new NotImplementedException("Sender Address not yet supported.");
 
