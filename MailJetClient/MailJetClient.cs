@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using RestSharp;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
@@ -22,6 +23,7 @@ namespace MailJet.Client
         public SendResponse SendMessage(MailMessage Message)
         {
             var request = new RestRequest("send/message", Method.POST);
+            request.RequestFormat = DataFormat.Json;
 
             if (Message.From == null)
                 throw new InvalidOperationException("You must specify the from address. http://dev.mailjet.com/guides/send-api-guide/");
@@ -90,7 +92,9 @@ namespace MailJet.Client
             if (view != null && view.LinkedResources != null && view.LinkedResources.Any())
             {
                 foreach (var item in view.LinkedResources)
-                    request.AddFile("inline_attachments", x => item.ContentStream.CopyTo(x), item.ContentId);
+                {
+                    request.AddFile("inlineattachment", ((MemoryStream)item.ContentStream).ToArray(), item.ContentId, item.ContentType.MediaType);
+                }
             }
 
             if (Message.Sender != null && !String.IsNullOrWhiteSpace(Message.Sender.Address))
@@ -99,7 +103,7 @@ namespace MailJet.Client
             var response = WebClient.Execute(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
-                throw response.ErrorException;
+                throw response.ErrorException ?? new Exception(response.StatusDescription);
 
             var data = JsonConvert.DeserializeObject<SendResponse>(response.Content);
             return data;

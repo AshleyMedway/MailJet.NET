@@ -37,7 +37,7 @@ namespace MailJet.Client.Tests
         public void MailMessage_Html_WithInlineAttachements()
         {
             var message = BaseMessage();
-            var body = "<img src=\"cid:test.jpg\">TEST</b>";
+            var body = "<html><head></head><body><img src=\"cid:test.jpg\"/></body></html>";
             message.Body = body;
             message.IsBodyHtml = true;
             var view = AlternateView.CreateAlternateViewFromString(body, null, MediaTypeNames.Text.Html);
@@ -48,7 +48,7 @@ namespace MailJet.Client.Tests
                 {
                     using (var s = new MemoryStream())
                     {
-                        g.Clear(Color.Black);
+                        g.FillRectangle(new SolidBrush(Color.Black), new Rectangle(0, 0, 128, 128));
                         bmp.Save(s, ImageFormat.Jpeg);
                         view.LinkedResources.Add(new LinkedResource(s, MediaTypeNames.Image.Jpeg) { ContentId = "test.jpg" });
                         message.AlternateViews.Add(view);
