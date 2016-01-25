@@ -23,8 +23,8 @@ namespace MailJet.Client.Tests
             if (String.IsNullOrWhiteSpace(publicKey))
                 throw new InvalidOperationException("Add your MailJet public API Key to the Environment Variable \"MailJetPub\".");
             if (String.IsNullOrWhiteSpace(privateKey))
-
                 throw new InvalidOperationException("Add your MailJet private API Key to the Environment Variable \"MailJetPri\".");
+
             _client = new MailJetClient(publicKey, privateKey);
         }
 
@@ -33,9 +33,6 @@ namespace MailJet.Client.Tests
         {
             var message = _client.GetMessages().Data.First();
             var result = _client.GetMessage(message.ID);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data.Any());
-            Assert.AreEqual(result.Count, result.Data.Count);
         }
 
         [Test]

@@ -141,12 +141,44 @@ namespace MailJet.Client
             return data;
         }
 
-        private RestClient WebClient
+        public DNSResponse GetDNS(string Domain)
         {
-            get
-            {
-                var client = new RestClient("https://api.mailjet.com/v3")
-                {
+            var request = new RestRequest("REST/dns/{domain}", Method.GET);
+            request.AddParameter("domain", Domain, ParameterType.UrlSegment);
+            var result = WebClient.Execute(request);
+            var data = JsonConvert.DeserializeObject<DNSResponse>(result.Content);
+            return data;
+        }
+
+        public DNSResponse GetDNS(long RecordId)
+        {
+            var request = new RestRequest("REST/dns/{id}", Method.GET);
+            request.AddParameter("id", RecordId);
+            var result = WebClient.Execute(request);
+            var data = JsonConvert.DeserializeObject<DNSResponse>(result.Content);
+            return data;
+        }
+
+        public DNSResponse GetDNS()
+        {
+            var request = new RestRequest("REST/dns", Method.GET);
+            var result = WebClient.Execute(request);
+            var data = JsonConvert.DeserializeObject<DNSResponse>(result.Content);
+            return data;
+        }
+
+        public DNSCheckResponse ForceDNSRecheck(long RecordId)
+        {
+            var request = new RestRequest("REST/dns/{id}/check", Method.POST);
+            request.AddParameter("id", RecordId, ParameterType.UrlSegment);
+            var result = WebClient.Execute(request);
+            var data = JsonConvert.DeserializeObject<DNSCheckResponse>(result.Content);
+            return data;
+        }
+
+        private RestClient WebClient {
+            get {
+                var client = new RestClient("https://api.mailjet.com/v3") {
                     Authenticator = new HttpBasicAuthenticator(_publicKey, _privateKey),
                     UserAgent = "MailJet.NET Client"
                 };

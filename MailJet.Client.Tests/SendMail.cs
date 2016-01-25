@@ -28,8 +28,8 @@ namespace MailJet.Client.Tests
             if (String.IsNullOrWhiteSpace(publicKey))
                 throw new InvalidOperationException("Add your MailJet public API Key to the Environment Variable \"MailJetPub\".");
             if (String.IsNullOrWhiteSpace(privateKey))
-
                 throw new InvalidOperationException("Add your MailJet private API Key to the Environment Variable \"MailJetPri\".");
+
             _client = new MailJetClient(publicKey, privateKey);
         }
 
