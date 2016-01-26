@@ -41,17 +41,12 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MailJetClient.cs" />
-    <Compile Include="Response\BaseResponse.cs" />
     <Compile Include="Response\Data\DataItem.cs" />
     <Compile Include="Response\Data\MessageHistoryData.cs" />
     <Compile Include="Response\Data\MessageData.cs" />
     <Compile Include="Enum\MessageStatus.cs" />
-    <Compile Include="Response\MessageHistoryResponse.cs" />
-    <Compile Include="Response\MessageResponse.cs" />
-    <Compile Include="Response\SendResponse.cs" />
-    <Compile Include="Response\DNSResponse.cs" />
+    <Compile Include="Response\Response.cs" />
     <Compile Include="Response\Data\DNSData.cs" />
-    <Compile Include="Response\DNSCheckResponse.cs" />
     <Compile Include="Response\Data\DNSCheckData.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

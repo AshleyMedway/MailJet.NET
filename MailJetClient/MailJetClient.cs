@@ -1,4 +1,5 @@
 ﻿using MailJet.Client.Response;
+using MailJet.Client.Response.Data;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
@@ -20,7 +21,7 @@ namespace MailJet.Client
             _privateKey = PrivateKey;
         }
 
-        public SendResponse SendMessage(MailMessage Message)
+        public Response<DataItem> SendMessage(MailMessage Message)
         {
             var request = new RestRequest("send/message", Method.POST);
 
@@ -108,77 +109,78 @@ namespace MailJet.Client
             if (response.StatusCode != HttpStatusCode.OK)
                 throw response.ErrorException ?? new Exception(response.StatusDescription);
 
-            var data = JsonConvert.DeserializeObject<SendResponse>(response.Content);
-            return data;
+            return ExecuteRequest<Response<DataItem>>(request);
         }
 
-        public MessageHistoryResponse GetMessageHistory(long MessageId)
+        public Response<MessageData> GetMessageHistory(long MessageId)
         {
             var request = new RestRequest("REST/messagehistory/{id}", Method.GET);
             request.AddParameter("id", MessageId);
-            var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<MessageHistoryResponse>(result.Content);
-            return data;
+            return ExecuteRequest<Response<MessageData>>(request);
         }
 
-        public MessageResponse GetMessage(long MessageId)
+        public Response<MessageData> GetMessage(long MessageId)
         {
             var request = new RestRequest("REST/message/{id}", Method.GET);
             request.AddParameter("id", MessageId);
-            var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<MessageResponse>(result.Content);
-            return data;
+            return ExecuteRequest<Response<MessageData>>(request);
         }
 
-        public MessageResponse GetMessages(int? Limit = null)
+        public Response<MessageData> GetMessages(int? Limit = null)
         {
             var request = new RestRequest("REST/message", Method.GET);
             if (Limit.HasValue)
                 request.AddParameter("limit", Limit.Value);
 
-            var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<MessageResponse>(result.Content);
-            return data;
+            return ExecuteRequest<Response<MessageData>>(request);
         }
 
-        public DNSResponse GetDNS(string Domain)
+        public Response<DNSData> GetDNS(string Domain)
         {
             var request = new RestRequest("REST/dns/{domain}", Method.GET);
             request.AddParameter("domain", Domain, ParameterType.UrlSegment);
-            var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<DNSResponse>(result.Content);
-            return data;
+            return ExecuteRequest<Response<DNSData>>(request);
         }
 
-        public DNSResponse GetDNS(long RecordId)
+        public Response<DNSData> GetDNS(long RecordId)
         {
             var request = new RestRequest("REST/dns/{id}", Method.GET);
             request.AddParameter("id", RecordId);
-            var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<DNSResponse>(result.Content);
-            return data;
+            return ExecuteRequest<Response<DNSData>>(request);
         }
 
-        public DNSResponse GetDNS()
+        public Response<DNSData> GetDNS()
         {
             var request = new RestRequest("REST/dns", Method.GET);
-            var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<DNSResponse>(result.Content);
-            return data;
+            return ExecuteRequest<Response<DNSData>>(request);
         }
 
-        public DNSCheckResponse ForceDNSRecheck(long RecordId)
+        public Response<DNSCheckData> ForceDNSRecheck(long RecordId)
         {
             var request = new RestRequest("REST/dns/{id}/check", Method.POST);
             request.AddParameter("id", RecordId, ParameterType.UrlSegment);
+            return ExecuteRequest<Response<DNSCheckData>>(request);
+        }
+
+        public void GetMetaSender()
+        {
+            var request = new RestRequest("REST/metasender", Method.GET);
             var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<DNSCheckResponse>(result.Content);
+        }
+
+        private T ExecuteRequest<T>(RestRequest request)
+        {
+            var result = WebClient.Execute(request);
+            var data = JsonConvert.DeserializeObject<T>(result.Content);
             return data;
         }
 
-        private RestClient WebClient {
-            get {
-                var client = new RestClient("https://api.mailjet.com/v3") {
+        private RestClient WebClient
+        {
+            get
+            {
+                var client = new RestClient("https://api.mailjet.com/v3")
+                {
                     Authenticator = new HttpBasicAuthenticator(_publicKey, _privateKey),
                     UserAgent = "MailJet.NET Client"
                 };

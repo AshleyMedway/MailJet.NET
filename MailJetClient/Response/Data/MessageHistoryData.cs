@@ -1,5 +1,4 @@
 ﻿using MailJet.Client.Enum;
-using System;
 
 namespace MailJet.Client.Response.Data
 {

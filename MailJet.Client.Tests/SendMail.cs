@@ -1,4 +1,5 @@
 ﻿using MailJet.Client.Response;
+using MailJet.Client.Response.Data;
 using NUnit.Framework;
 using System;
 using System.Drawing;
@@ -41,7 +42,7 @@ namespace MailJet.Client.Tests
             message.Body = body;
             message.IsBodyHtml = true;
             var view = AlternateView.CreateAlternateViewFromString(body, null, MediaTypeNames.Text.Html);
-            SendResponse result;
+            Response<DataItem> result;
             using (var bmp = new Bitmap(128, 128))
             {
                 using (var g = Graphics.FromImage(bmp))

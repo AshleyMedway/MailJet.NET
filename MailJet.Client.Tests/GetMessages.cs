@@ -33,6 +33,8 @@ namespace MailJet.Client.Tests
         {
             var message = _client.GetMessages().Data.First();
             var result = _client.GetMessage(message.ID);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(message.ID, result.Data.Single().ID);
         }
 
         [Test]
