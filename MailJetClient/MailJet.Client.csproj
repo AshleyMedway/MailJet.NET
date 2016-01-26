@@ -45,6 +45,8 @@
     <Compile Include="Response\Data\MessageHistoryData.cs" />
     <Compile Include="Response\Data\MessageData.cs" />
     <Compile Include="Enum\MessageStatus.cs" />
+    <Compile Include="Response\Data\MetaSenderData.cs" />
+    <Compile Include="Response\ErrorResponse.cs" />
     <Compile Include="Response\Response.cs" />
     <Compile Include="Response\Data\DNSData.cs" />
     <Compile Include="Response\Data\DNSCheckData.cs" />

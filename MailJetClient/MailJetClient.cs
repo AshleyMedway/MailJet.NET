@@ -109,21 +109,21 @@ namespace MailJet.Client
             if (response.StatusCode != HttpStatusCode.OK)
                 throw response.ErrorException ?? new Exception(response.StatusDescription);
 
-            return ExecuteRequest<Response<DataItem>>(request);
+            return ExecuteRequest<DataItem>(request);
         }
 
         public Response<MessageData> GetMessageHistory(long MessageId)
         {
             var request = new RestRequest("REST/messagehistory/{id}", Method.GET);
             request.AddParameter("id", MessageId);
-            return ExecuteRequest<Response<MessageData>>(request);
+            return ExecuteRequest<MessageData>(request);
         }
 
         public Response<MessageData> GetMessage(long MessageId)
         {
             var request = new RestRequest("REST/message/{id}", Method.GET);
             request.AddParameter("id", MessageId);
-            return ExecuteRequest<Response<MessageData>>(request);
+            return ExecuteRequest<MessageData>(request);
         }
 
         public Response<MessageData> GetMessages(int? Limit = null)
@@ -132,46 +132,89 @@ namespace MailJet.Client
             if (Limit.HasValue)
                 request.AddParameter("limit", Limit.Value);
 
-            return ExecuteRequest<Response<MessageData>>(request);
+            return ExecuteRequest<MessageData>(request);
         }
 
         public Response<DNSData> GetDNS(string Domain)
         {
             var request = new RestRequest("REST/dns/{domain}", Method.GET);
             request.AddParameter("domain", Domain, ParameterType.UrlSegment);
-            return ExecuteRequest<Response<DNSData>>(request);
+            return ExecuteRequest<DNSData>(request);
         }
 
         public Response<DNSData> GetDNS(long RecordId)
         {
             var request = new RestRequest("REST/dns/{id}", Method.GET);
             request.AddParameter("id", RecordId);
-            return ExecuteRequest<Response<DNSData>>(request);
+            return ExecuteRequest<DNSData>(request);
         }
 
         public Response<DNSData> GetDNS()
         {
             var request = new RestRequest("REST/dns", Method.GET);
-            return ExecuteRequest<Response<DNSData>>(request);
+            return ExecuteRequest<DNSData>(request);
         }
 
         public Response<DNSCheckData> ForceDNSRecheck(long RecordId)
         {
             var request = new RestRequest("REST/dns/{id}/check", Method.POST);
             request.AddParameter("id", RecordId, ParameterType.UrlSegment);
-            return ExecuteRequest<Response<DNSCheckData>>(request);
+            return ExecuteRequest<DNSCheckData>(request);
         }
 
-        public void GetMetaSender()
+        public Response<MetaSenderData> GetMetaSender()
         {
             var request = new RestRequest("REST/metasender", Method.GET);
-            var result = WebClient.Execute(request);
+            return ExecuteRequest<MetaSenderData>(request);
         }
 
-        private T ExecuteRequest<T>(RestRequest request)
+        public Response<MetaSenderData> GetMetaSender(long SenderId)
+        {
+            var request = new RestRequest("REST/metasender/{id}", Method.GET);
+            request.AddParameter("id", SenderId);
+            return ExecuteRequest<MetaSenderData>(request);
+        }
+
+        public Response<MetaSenderData> GetMetaSender(string Email)
+        {
+            var request = new RestRequest("REST/metasender/{email}", Method.GET);
+            request.AddParameter("email", Email, ParameterType.UrlSegment);
+            return ExecuteRequest<MetaSenderData>(request);
+        }
+
+        public Response<MetaSenderData> CreateMetaSender(string Email, string Description = null)
+        {
+            var request = new RestRequest("REST/metasender", Method.POST);
+            request.AddParameter("email", Email);
+            if (!String.IsNullOrWhiteSpace(Description))
+                request.AddParameter("description", Description);
+
+            return ExecuteRequest<MetaSenderData>(request);
+        }
+
+        public Response<MetaSenderData> UpdateMetaSender(long SenderId, string Email = null, bool? IsEnabled = null, string Description = null)
+        {
+            var request = new RestRequest("REST/metasender/{id}", Method.PUT);
+            request.AddParameter("id", SenderId, ParameterType.UrlSegment);
+            if (!String.IsNullOrWhiteSpace(Email))
+                request.AddParameter("email", Email);
+            if (!String.IsNullOrWhiteSpace(Description))
+                request.AddParameter("description", Description);
+            if (IsEnabled.HasValue)
+                request.AddParameter("isEnabled", IsEnabled.Value);
+
+            return ExecuteRequest<MetaSenderData>(request);
+        }
+
+        private Response<T> ExecuteRequest<T>(RestRequest request) where T : DataItem
         {
             var result = WebClient.Execute(request);
-            var data = JsonConvert.DeserializeObject<T>(result.Content);
+            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
+
+            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
+                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+            
+            var data = JsonConvert.DeserializeObject<Response<T>>(result.Content);
             return data;
         }
 
