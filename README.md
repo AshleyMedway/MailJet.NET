@@ -2,7 +2,8 @@
 An unofficial .NET Client for use with MailJet v3 API.
 
 [![Build Status](https://travis-ci.org/AshleyMedway/MailJet.NET.svg?branch=master)](https://travis-ci.org/AshleyMedway/MailJet.NET)
-[![Build Status](https://img.shields.io/nuget/dt/MailJet.NET.svg)](https://www.nuget.org/packages/MailJet.NET)
+[![Gitter](https://badges.gitter.im/AshleyMedway/MailJet.NET.svg)](https://gitter.im/AshleyMedway/MailJet.NET?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge)
+[![NuGet](https://img.shields.io/nuget/dt/MailJet.NET.svg)](https://www.nuget.org/packages/MailJet.NET)
 
 Currently implemented features:  
 
