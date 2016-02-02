@@ -24,6 +24,6 @@ If there is a specific feature of the API you would like please create an issue 
 ###Basic Usage
 
     MailJetClient client = new MailJetClient("{PublicKey}", "{PrivateKey}");
-    client.SendMessage(System.Net.Mail.MailMessage);
+    client.SendMessage(new System.Net.Mail.MailMessage());
 
 For a more detailed usage you can see the [SendMail](https://github.com/AshleyMedway/MailJet.NET/blob/master/MailJet.Client.Tests/SendMail.cs) UnitTests.
