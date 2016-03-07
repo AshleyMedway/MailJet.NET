@@ -62,7 +62,7 @@ namespace MailJet.Client
             request.AddParameter("id", ID, ParameterType.UrlSegment);
         }
 
-        public Response<ContactListData> CreateContactForList(long ID, Contact contact)
+        public Response<ContactData> CreateContactForList(long ID, Contact contact)
         {
             var request = new RestRequest("REST/contactslist/{id}/managecontact", Method.POST);
             request.AddParameter("id", ID, ParameterType.UrlSegment);
@@ -71,7 +71,7 @@ namespace MailJet.Client
             request.AddParameter("properties", contact.Properties, ParameterType.GetOrPost);
             request.AddParameter("action", System.Enum.GetName(typeof(CreateContactAction), contact.Action), ParameterType.GetOrPost);
 
-            return ExecuteRequest<ContactListData>(request);
+            return ExecuteRequest<ContactData>(request);
         }
 
         public Response<DataItem> SendMessage(MailMessage Message)

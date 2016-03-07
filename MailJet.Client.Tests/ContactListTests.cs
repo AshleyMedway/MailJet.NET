@@ -1,4 +1,6 @@
-﻿using MailJet.Client.Response.Data;
+﻿using MailJet.Client.Enum;
+using MailJet.Client.Request;
+using MailJet.Client.Response.Data;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -30,6 +32,38 @@ namespace MailJet.Client.Tests
                 throw new InvalidOperationException("Add your MailJet private API Key to the Environment Variable \"MailJetPri\".");
 
             _client = new MailJetClient(publicKey, privateKey);
+        }
+
+        [Test]
+        public void CreateContactForList()
+        {
+            if (_testId == -1)
+            {
+                var all = _client.GetAllContactLists();
+                var item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
+                if (item == null)
+                {
+                    Assert.Fail("Could not find a test item to test this method");
+                }
+
+                _testId = item.ID;
+                _testAddress = item.Address;
+            }
+            string email = String.Format("test_{0}@mailjet.net", Guid.NewGuid());
+            const string name = "TEST CONTACT";
+            var contact = new Contact()
+            {
+                Action = CreateContactAction.addnoforce,
+                Email = email,
+                Name = name
+            };
+
+            contact.AddProperty("SomeInfo", "TestProperty");
+
+            var result = _client.CreateContactForList(_testId, contact);
+            var resultItem = result.Data.Single();
+            Assert.AreEqual(email, resultItem.Email);
+            Assert.AreEqual(name, resultItem.Name);
         }
 
         [Test]
