@@ -1,4 +1,6 @@
-﻿using MailJet.Client.Response;
+﻿using MailJet.Client.Enum;
+using MailJet.Client.Request;
+using MailJet.Client.Response;
 using MailJet.Client.Response.Data;
 using Newtonsoft.Json;
 using RestSharp;
@@ -19,6 +21,57 @@ namespace MailJet.Client
         {
             _publicKey = PublicKey;
             _privateKey = PrivateKey;
+        }
+
+        public Response<ContactListData> CreateContactList(string Name)
+        {
+            var request = new RestRequest("REST/contactslist", Method.POST);
+            request.AddParameter("name", Name, ParameterType.GetOrPost);
+            return ExecuteRequest<ContactListData>(request);
+        }
+
+        public Response<ContactListData> GetAllContactLists()
+        {
+            var request = new RestRequest("REST/contactslist", Method.GET);
+            return ExecuteRequest<ContactListData>(request);
+        }
+
+        public Response<ContactListData> GetContactList(long ID)
+        {
+            var request = new RestRequest("REST/contactslist/{id}", Method.GET);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            return ExecuteRequest<ContactListData>(request);
+        }
+
+        public Response<ContactListData> GetContactList(string Address)
+        {
+            var request = new RestRequest("REST/contactslist/{Address}", Method.GET);
+            request.AddParameter("Address", Address, ParameterType.UrlSegment);
+            return ExecuteRequest<ContactListData>(request);
+        }
+
+        public void DeleteContactList(string Address)
+        {
+            var request = new RestRequest("REST/contactslist/{Address}", Method.DELETE);
+            request.AddParameter("Address", Address, ParameterType.UrlSegment);
+        }
+
+        public void DeleteContactList(long ID)
+        {
+            var request = new RestRequest("REST/contactslist/{id}", Method.DELETE);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
+        }
+
+        public Response<ContactListData> CreateContactForList(long ID, Contact contact)
+        {
+            var request = new RestRequest("REST/contactslist/{id}/managecontact", Method.POST);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            request.AddParameter("name", contact.Name, ParameterType.GetOrPost);
+            request.AddParameter("email", contact.Email, ParameterType.GetOrPost);
+            request.AddParameter("properties", contact.Properties, ParameterType.GetOrPost);
+            request.AddParameter("action", System.Enum.GetName(typeof(CreateContactAction), contact.Action), ParameterType.GetOrPost);
+
+            return ExecuteRequest<ContactListData>(request);
         }
 
         public Response<DataItem> SendMessage(MailMessage Message)
@@ -208,12 +261,16 @@ namespace MailJet.Client
 
         private Response<T> ExecuteRequest<T>(RestRequest request) where T : DataItem
         {
+            request.RequestFormat = DataFormat.Json;
             var result = WebClient.Execute(request);
-            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
 
+            if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.NoContent)
+                return null;
+
+            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
             if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
                 throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
-            
+
             var data = JsonConvert.DeserializeObject<Response<T>>(result.Content);
             return data;
         }
