@@ -8,14 +8,17 @@ An unofficial .NET Client for use with MailJet v3 API.
 Currently implemented features:  
 
  * Sending Messages & Getting MessageInfo
- * Some account management (DNS & MetaSender)
+ * Some account management (DNS & MetaSender) - [api doc](http://dev.mailjet.com/email-api/v3/dns/)
+ * Contact list management (create/sub/unsub/etc.) - [api doc](http://dev.mailjet.com/email-api/v3/contactslist/)
+ * Contact Metadata management (CRUD) - [api doc](http://dev.mailjet.com/email-api/v3/contactmetadata/)
 
 Next features will be (unless anyone raises issues otherwise):
 
- * Completing account management (Sender, MyProfile & User)
+ * Completing account management (Sender, MyProfile & User) - [api doc](http://dev.mailjet.com/email-api/v3/myprofile/)
+ * Contact management - [api doc](http://dev.mailjet.com/email-api/v3/contact/)
 
 
-The package uses `System.Net.Mail.MailMessage` for sending outgoing mail as this hopefully allows for simple transition between using `System.Net.Mail.SmtpClient`.  
+The package uses `System.Net.Mail.MailMessage` for sending outgoing mail as this hopefully allows for simple transition from using `System.Net.Mail.SmtpClient`.  
 If you find any features of `MailMessage` have not been implemented please raise an issue.
 
 
