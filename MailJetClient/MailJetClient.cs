@@ -54,12 +54,14 @@ namespace MailJet.Client
         {
             var request = new RestRequest("REST/contactslist/{Address}", Method.DELETE);
             request.AddParameter("Address", Address, ParameterType.UrlSegment);
+            ExecuteRequest(request);
         }
 
         public void DeleteContactList(long ID)
         {
             var request = new RestRequest("REST/contactslist/{id}", Method.DELETE);
             request.AddParameter("id", ID, ParameterType.UrlSegment);
+            ExecuteRequest(request);
         }
 
         public Response<ContactData> CreateContactForList(long ID, Contact contact)
@@ -72,6 +74,74 @@ namespace MailJet.Client
             request.AddParameter("action", System.Enum.GetName(typeof(CreateContactAction), contact.Action), ParameterType.GetOrPost);
 
             return ExecuteRequest<ContactData>(request);
+        }
+
+        public Response<ContactMetadata> GetContactMetaData()
+        {
+            var request = new RestRequest("REST/contactmetadata", Method.GET);
+            return ExecuteRequest<ContactMetadata>(request);
+        }
+
+        public Response<ContactMetadata> GetContactMetaData(long ID)
+        {
+            var request = new RestRequest("REST/contactmetadata/{id}", Method.GET);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            return ExecuteRequest<ContactMetadata>(request);
+        }
+
+        public Response<ContactMetadata> GetContactMetaData(string Name, ContactMetadataNameSpace NameSpace)
+        {
+            var request = new RestRequest("REST/contactmetadata/{namespace}|{name}", Method.GET);
+            request.AddParameter("name", Name, ParameterType.UrlSegment);
+            var @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), NameSpace);
+            request.AddParameter("namespace", @namespace, ParameterType.UrlSegment);
+
+            return ExecuteRequest<ContactMetadata>(request);
+        }
+
+        public Response<ContactMetadata> CreateContactMetaData(ContactMetadata ContactMetadata)
+        {
+            if (ContactMetadata.Name.Any(x => x == ' '))
+            {
+                throw new InvalidOperationException("Name cannot contain a space");
+            }
+            var request = new RestRequest("REST/contactmetadata", Method.POST);
+            request.AddParameter("name", ContactMetadata.Name, ParameterType.GetOrPost);
+
+            var @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), ContactMetadata.NameSpace);
+            request.AddParameter("namespace", @namespace, ParameterType.GetOrPost);
+
+            var type = System.Enum.GetName(typeof(ContactMetadataDataType), ContactMetadata.Datatype);
+            request.AddParameter("datatype", type, ParameterType.GetOrPost);
+
+            return ExecuteRequest<ContactMetadata>(request);
+        }
+
+        public Response<ContactMetadata> UpdateContactMetaData(ContactMetadata ContactMetadata)
+        {
+            if (ContactMetadata.Name.Any(x => x == ' '))
+            {
+                throw new InvalidOperationException("Name cannot contain a space");
+            }
+
+            var request = new RestRequest("REST/contactmetadata/{id}", Method.PUT);
+            request.AddParameter("id", ContactMetadata.ID, ParameterType.UrlSegment);
+            request.AddParameter("name", ContactMetadata.Name, ParameterType.GetOrPost);
+
+            var @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), ContactMetadata.NameSpace);
+            request.AddParameter("namespace", @namespace, ParameterType.GetOrPost);
+
+            var type = System.Enum.GetName(typeof(ContactMetadataDataType), ContactMetadata.Datatype);
+            request.AddParameter("datatype", type, ParameterType.GetOrPost);
+
+            return ExecuteRequest<ContactMetadata>(request);
+        }
+
+        public void DeleteContactMetaData(long ID)
+        {
+            var request = new RestRequest("REST/contactmetadata/{id}", Method.DELETE);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            ExecuteRequest(request);
         }
 
         public Response<DataItem> SendMessage(MailMessage Message)
@@ -273,6 +343,19 @@ namespace MailJet.Client
 
             var data = JsonConvert.DeserializeObject<Response<T>>(result.Content);
             return data;
+        }
+
+        private void ExecuteRequest(RestRequest request)
+        {
+            request.RequestFormat = DataFormat.Json;
+            var result = WebClient.Execute(request);
+
+            if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.NoContent)
+                return;
+
+            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
+            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
+                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
         }
 
         private RestClient WebClient

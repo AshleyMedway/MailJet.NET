@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContactListTests.cs" />
+    <Compile Include="ContactMetadataTests.cs" />
     <Compile Include="GetMessages.cs" />
     <Compile Include="SendMail.cs" />
     <Compile Include="AccountTests.cs" />
