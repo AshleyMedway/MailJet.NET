@@ -249,9 +249,41 @@ namespace MailJet.Client
             return ExecuteRequest<MessageData>(request);
         }
 
-        public Response<MessageData> GetMessages(int? Limit = null)
+        /// <summary>
+        /// Allows you to list and view the details of a Message (an e-mail) processed by Mailjet
+        /// </summary>
+        /// <param name="Limit">Limit the number of results, default is 10</param>
+        /// <param name="ContactId">Only retrieve message resources for which Contact ID equals the specified value.</param>
+        /// <param name="CampaignId">Only retrieve message resources for which Campaign ID equals the specified value.</param>
+        /// <param name="DestinationId">Only retrieve message resources for which Destination ID equals the specified value.</param>
+        /// <param name="MessageStateId">Only show messages with this state.</param>
+        /// <param name="SenderId">Only show messages from this sender.</param>
+        /// <returns></returns>
+        public Response<MessageData> GetMessages(
+            int? Limit = null,
+            long? ContactId = null,
+            long? CampaignId = null,
+            long? DestinationId = null,
+            long? MessageStateId = null,
+            long? SenderId = null)
         {
             var request = new RestRequest("REST/message", Method.GET);
+
+            if (ContactId.HasValue)
+                request.AddQueryParameter("Contact", ContactId.Value.ToString());
+
+            if (CampaignId.HasValue)
+                request.AddQueryParameter("Campaign", CampaignId.Value.ToString());
+
+            if (DestinationId.HasValue)
+                request.AddQueryParameter("Destination", DestinationId.Value.ToString());
+
+            if (MessageStateId.HasValue)
+                request.AddQueryParameter("MessageState", MessageStateId.Value.ToString());
+
+            if (SenderId.HasValue)
+                request.AddQueryParameter("Sender", SenderId.Value.ToString());
+
             if (Limit.HasValue)
                 request.AddParameter("limit", Limit.Value);
 
@@ -326,6 +358,13 @@ namespace MailJet.Client
             if (IsEnabled.HasValue)
                 request.AddParameter("isEnabled", IsEnabled.Value);
 
+            return ExecuteRequest<MetaSenderData>(request);
+        }
+
+        public Response<MetaSenderData> GetContactData(long ID)
+        {
+            var request = new RestRequest("REST/contactdata/{id}", Method.GET);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
             return ExecuteRequest<MetaSenderData>(request);
         }
 

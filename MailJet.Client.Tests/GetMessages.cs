@@ -44,6 +44,82 @@ namespace MailJet.Client.Tests
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
+            //default limit is 10
+            Assert.AreEqual(10, result.Data.Count);
+            Assert.AreEqual(10, result.Count);
+        }
+
+        [Test]
+        public void GetMessagesFilterByContact_Test()
+        {
+            var result = _client.GetMessages(ContactId: 1);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => x.ContactID == 1));
+        }
+
+        [Test]
+        public void GetMessagesFilterByCampaign_Test()
+        {
+            var result = _client.GetMessages(CampaignId: 1);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => x.CampaignID == 1));
+        }
+
+        [Test]
+        public void GetMessagesFilterByDestination_Test()
+        {
+            var result = _client.GetMessages(DestinationId: 42);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => x.DestinationID == 42));
+        }
+
+        [Test]
+        public void GetMessagesFilterByMessageState_Test()
+        {
+            var result = _client.GetMessages(MessageStateId: 0);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => x.StateID == 0));
+        }
+
+
+        [Test]
+        public void GetMessagesFilterBySender_Test()
+        {
+            var result = _client.GetMessages(SenderId: 3);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => x.FromID == 3));
+        }
+
+        [Test]
+        public void GetMessagesFilterChangeLimit_Increase()
+        {
+            var result = _client.GetMessages(Limit: 20);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.AreEqual(20, result.Data.Count);
+            Assert.AreEqual(20, result.Count);
+        }
+
+        [Test]
+        public void GetMessagesFilterChangeLimit_Decrease()
+        {
+            var result = _client.GetMessages(Limit: 3);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data.Any());
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.AreEqual(3, result.Data.Count);
+            Assert.AreEqual(3, result.Count);
         }
 
         [Test]
