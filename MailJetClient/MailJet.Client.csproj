@@ -49,6 +49,7 @@
     <Compile Include="Response\Data\ContactListData.cs" />
     <Compile Include="Response\Data\ContactMetadata.cs" />
     <Compile Include="Response\Data\DataItem.cs" />
+    <Compile Include="Response\Data\ListRecipient.cs" />
     <Compile Include="Response\Data\MessageHistoryData.cs" />
     <Compile Include="Response\Data\MessageData.cs" />
     <Compile Include="Enum\MessageStatus.cs" />

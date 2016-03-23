@@ -368,6 +368,72 @@ namespace MailJet.Client
             return ExecuteRequest<MetaSenderData>(request);
         }
 
+        /// <summary>
+        /// Manage the relationship between a contact and a contactslists.
+        /// </summary>
+        /// <param name="IsActive">Retrieve only list recipients for which the IsActive property matches the specified value.</param>
+        /// <param name="IsBlocked">Retrieve only list recipients for which the contact's IsBlocked property matches the specified value.</param>
+        /// <param name="ContactId">Only retrieve listrecipient resources for which Contact ID equals the specified value.</param>
+        /// <param name="ContactEmail">Retrieve only list recipients for which the contact's Email property matches the specified value.</param>
+        /// <param name="ContactsListId">Retrieve only list recipients for the specified contact list.</param>
+        /// <param name="IgnoreDeleted">Remove deleted contacts from the resultset.</param>
+        /// <param name="LastActivityAt">Timestamp of last registered activity for this ListRecipient.</param>
+        /// <param name="ListName">Retrieve only list recipients for the specified contact list.</param>
+        /// <param name="IsOpened">Retrieve only list recipients for which the contact has at least an opened email.</param>
+        /// <param name="Status">Retrieve only list recipients for the given status.</param>
+        /// <param name="Unsub">Retrieve only list recipients for which the IsUnsubscribed property matches the specified value.</param>
+        /// <returns></returns>
+        public Response<ListRecipient> GetListRecipient(
+            bool? IsActive = null,
+            bool? IsBlocked = null,
+            long? ContactId = null,
+            string ContactEmail = null,
+            long? ContactsListId = null,
+            bool? IgnoreDeleted = null,
+            DateTime? LastActivityAt = null,
+            string ListName = null,
+            bool? IsOpened = null,
+            string Status = null,
+            bool? Unsub = null)
+        {
+            var request = new RestRequest("REST/listrecipient", Method.GET);
+
+            if (IsActive.HasValue)
+                request.AddQueryParameter("Active", IsActive.Value.ToString());
+
+            if (IsBlocked.HasValue)
+                request.AddQueryParameter("Blocked", IsBlocked.Value.ToString());
+
+            if (ContactId.HasValue)
+                request.AddQueryParameter("Contact", ContactId.Value.ToString());
+
+            if (!String.IsNullOrWhiteSpace(ContactEmail))
+                request.AddQueryParameter("ContactEmail", ContactEmail);
+
+            if (ContactsListId.HasValue)
+                request.AddQueryParameter("ContactsList", ContactsListId.Value.ToString());
+
+            if (IgnoreDeleted.HasValue)
+                request.AddQueryParameter("IgnoreDeleted", IgnoreDeleted.Value.ToString());
+
+            if (LastActivityAt.HasValue)
+                request.AddQueryParameter("LastActivityAt", LastActivityAt.Value.ToString());
+
+            if (!String.IsNullOrWhiteSpace(ListName))
+                request.AddQueryParameter("ListName", ListName);
+
+            if (IsOpened.HasValue)
+                request.AddQueryParameter("Opened", IsOpened.Value.ToString());
+
+            if (!String.IsNullOrWhiteSpace(Status))
+                request.AddQueryParameter("Status", Status);
+
+            if (Unsub.HasValue)
+                request.AddQueryParameter("Unsub", Unsub.Value.ToString());
+
+            return ExecuteRequest<ListRecipient>(request);
+        }
+
         private Response<T> ExecuteRequest<T>(RestRequest request) where T : DataItem
         {
             request.RequestFormat = DataFormat.Json;
