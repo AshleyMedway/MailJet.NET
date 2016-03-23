@@ -32,6 +32,13 @@ namespace MailJet.Client.Tests
         }
 
         [Test]
+        public void GetContactData()
+        {
+            Assert.Ignore("Test Incomplete");
+            var data = _client.GetContactData(21332);
+        }
+
+        [Test]
         public void GetAllContactMetaData()
         {
             var data = _client.GetContactMetaData();

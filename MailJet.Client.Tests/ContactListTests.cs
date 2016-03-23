@@ -43,7 +43,9 @@ namespace MailJet.Client.Tests
                 var item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 if (item == null)
                 {
-                    Assert.Fail("Could not find a test item to test this method");
+                    CreateContactList();
+                    all = _client.GetAllContactLists();
+                    item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 }
 
                 _testId = item.ID;
@@ -58,7 +60,7 @@ namespace MailJet.Client.Tests
                 Name = name
             };
 
-            contact.AddProperty("SomeInfo", "TestProperty");
+            contact.AddProperty("blah", "TestValueForBlahProperty");
 
             var result = _client.CreateContactForList(_testId, contact);
             var resultItem = result.Data.Single();
@@ -69,7 +71,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void CreateContactList()
         {
-            var result = _client.CreateContactList(String.Format("Test {0:dd-MM-yyyy hh:mm:ss}", DateTime.UtcNow));
+            var result = _client.CreateContactList(String.Format("Test {0:o}", DateTime.UtcNow));
             Assert.IsNotNull(result);
             var item = result.Data.Single();
             _testId = item.ID;
@@ -94,7 +96,9 @@ namespace MailJet.Client.Tests
                 item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 if (item == null)
                 {
-                    Assert.Fail("Could not find a test item to test this method");
+                    CreateContactList();
+                    all = _client.GetAllContactLists();
+                    item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 }
 
                 _testId = item.ID;
@@ -117,7 +121,9 @@ namespace MailJet.Client.Tests
                 item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 if (item == null)
                 {
-                    Assert.Fail("Could not find a test item to test this method");
+                    CreateContactList();
+                    all = _client.GetAllContactLists();
+                    item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 }
 
                 _testId = item.ID;
@@ -139,7 +145,7 @@ namespace MailJet.Client.Tests
                 var item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 if (item == null)
                 {
-                    item = _client.CreateContactList(String.Format("Test {0:dd-MM-yyyy hh:mm:ss}", DateTime.UtcNow)).Data.Single();
+                    item = _client.CreateContactList(String.Format("Test {0:o}", DateTime.UtcNow)).Data.Single();
                 }
 
                 _testId = item.ID;
@@ -159,7 +165,7 @@ namespace MailJet.Client.Tests
                 var item = all.Data.Where(x => x.Name.StartsWith("Test")).FirstOrDefault();
                 if (item == null)
                 {
-                    item = _client.CreateContactList(String.Format("Test {0:dd-MM-yyyy hh:mm:ss}", DateTime.UtcNow)).Data.Single();
+                    item = _client.CreateContactList(String.Format("Test {0:o}", DateTime.UtcNow)).Data.Single();
                 }
 
                 _testId = item.ID;
@@ -168,6 +174,174 @@ namespace MailJet.Client.Tests
             _client.DeleteContactList(_testAddress);
             _testAddress = String.Empty;
             _testId = -1;
+        }
+
+        [Test]
+        public void ListRecipient_All()
+        {
+            var result = _client.GetListRecipient();
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(result.Count, result.Data.Count);
+        }
+
+        [Test]
+        public void ListRecipient_IsActive()
+        {
+            var result = _client.GetListRecipient(IsActive: true);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => x.IsActive));
+        }
+
+        [Test]
+        public void ListRecipient_IsBlocked()
+        {
+            //TODO: Write test
+            Assert.Ignore("Not sure how to test");
+        }
+
+        [TestCase(true)]
+        public void ListRecipient_ByContactId(bool firstrun)
+        {
+            try
+            {
+                var result = _client.GetListRecipient();
+                var item = result.Data.First();
+                var api = _client.GetListRecipient(ContactId: item.ContactID);
+                Assert.IsNotNull(api);
+                Assert.IsNotNull(api.Data);
+                Assert.AreEqual(api.Count, api.Data.Count);
+                Assert.IsTrue(api.Data.All(x => x.ContactID == item.ContactID));
+            }
+            catch (InvalidOperationException)
+            {
+                if (firstrun)
+                {
+                    CreateContactForList();
+                    ListRecipient_ByContactId(false);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        [Test]
+        public void ListRecipient_ByContactEmail()
+        {
+            Assert.Ignore("Test not complete, need to be able to query /contact");
+            //var result = _client.GetListRecipient();
+            //var item = result.Data.First();
+            //TODO: remove hardcoded test
+            var api = _client.GetListRecipient(ContactEmail: "test_33a8282d-e66e-4dab-86c9-1fcc548cba55@mailjet.net");
+            Assert.IsNotNull(api);
+            Assert.IsNotNull(api.Data);
+            Assert.AreEqual(api.Count, api.Data.Count);
+            //TODO: remove hardcoded test
+            Assert.IsTrue(api.Data.All(x => x.ContactID == 1689224808));
+        }
+
+        [Test]
+        public void ListRecipient_ByContactListId()
+        {
+            var result = _client.GetListRecipient();
+            var item = result.Data.First();
+            var api = _client.GetListRecipient(ContactsListId: item.ListID);
+            Assert.IsNotNull(api);
+            Assert.IsNotNull(api.Data);
+            Assert.AreEqual(api.Count, api.Data.Count);
+            Assert.IsTrue(api.Data.All(x => x.ListID == item.ListID));
+        }
+
+        [Test]
+        public void ListRecipient_ByContactListIdAndContactId()
+        {
+            var result = _client.GetListRecipient();
+            var item = result.Data.First();
+            var api = _client.GetListRecipient(ContactsListId: item.ListID, ContactId: item.ContactID);
+            Assert.IsNotNull(api);
+            Assert.IsNotNull(api.Data);
+            Assert.AreEqual(api.Count, api.Data.Count);
+            Assert.IsTrue(api.Data.All(x => x.ListID == item.ListID && x.ContactID == item.ContactID));
+        }
+
+
+        [Test]
+        public void ListRecipient_ByContactListIdAndContactIdAndUnSub_False()
+        {
+            var result = _client.GetListRecipient();
+            var item = result.Data.First();
+            var api = _client.GetListRecipient(ContactsListId: item.ListID, ContactId: item.ContactID, Unsub: false);
+            Assert.IsNotNull(api);
+            Assert.IsNotNull(api.Data);
+            Assert.AreEqual(api.Count, api.Data.Count);
+            Assert.IsTrue(api.Data.All(x => x.ListID == item.ListID && x.ContactID == item.ContactID && !x.IsUnsubscribed));
+        }
+
+        [Test]
+        public void ListRecipient_IgnoreDeleted()
+        {
+            //TODO: Write test
+            Assert.Ignore("Not sure how to test");
+        }
+
+        [Test]
+        public void ListRecipient_ByLastActivityAt()
+        {
+            //TODO: Write test
+            Assert.Ignore("Not sure how to test");
+        }
+
+        [Test]
+        public void ListRecipient_ByListName()
+        {
+            Assert.Ignore("Test not complete, need to be able to query /contact");
+            //var result = _client.GetListRecipient();
+            //var item = result.Data.First();
+            //TODO: remove hardcoded test
+            var api = _client.GetListRecipient(ListName: "Test 07-03-2016 09:05:45");
+            Assert.IsNotNull(api);
+            Assert.IsNotNull(api.Data);
+            Assert.AreEqual(api.Count, api.Data.Count);
+            //TODO: remove hardcoded test
+            Assert.IsTrue(api.Data.All(x => x.ListID == 1486008));
+        }
+
+        [Test]
+        public void ListRecipient_ByOpenedEmail()
+        {
+            //TODO: Write test
+            Assert.Ignore("Not sure how to test");
+        }
+
+        [Test]
+        public void ListRecipient_ByStatus()
+        {
+            //TODO: Write test
+            Assert.Ignore("Not sure how to test");
+        }
+
+        [Test]
+        public void ListRecipient_ByUnSub_False()
+        {
+            var result = _client.GetListRecipient(Unsub: false);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => !x.IsUnsubscribed));
+        }
+
+        [Test]
+        public void ListRecipient_ByUnSub_True()
+        {
+            var result = _client.GetListRecipient(Unsub: true);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(result.Count, result.Data.Count);
+            Assert.IsTrue(result.Data.All(x => x.IsUnsubscribed));
         }
     }
 }
