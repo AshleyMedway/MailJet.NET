@@ -109,11 +109,14 @@ namespace MailJet.Client.Tests
         [Test]
         public void MetaSender_Update()
         {
-            var sender = _client.GetMetaSender().Data.FirstOrDefault(x => x.Description.Equals("[TEST]"));
+            var sender = _client.GetMetaSender().Data.FirstOrDefault();
             if (sender == null)
-                Assert.Inconclusive("Test ran in wrong order and no update could be preformed.");
+            {
+                MetaSender_Create();
+                sender = _client.GetMetaSender().Data.FirstOrDefault();
+            }
 
-            var result = _client.UpdateMetaSender(sender.ID, Description: "[TEST2]", IsEnabled: false);
+            var result = _client.UpdateMetaSender(sender.ID, Description: Guid.NewGuid().ToString(), IsEnabled: false);
 
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Data.Single().ID, sender.ID);

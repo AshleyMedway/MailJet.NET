@@ -8,16 +8,16 @@ namespace MailJet.Client.Request
         public string Email { get; set; }
         public string Name { get; set; }
         public CreateContactAction Action { get; set; }
-        public Dictionary<string, string> Properties { get; set; }
+        public List<TKEYVALUELIST> Properties { get; set; }
 
         public Contact()
         {
-            Properties = new Dictionary<string, string>();
+            Properties = new List<TKEYVALUELIST>();
         }
 
         public void AddProperty(string key, string value)
         {
-            Properties.Add(key, value);
+            Properties.Add(new TKEYVALUELIST { Name = key, Value = value });
         }
     }
 }

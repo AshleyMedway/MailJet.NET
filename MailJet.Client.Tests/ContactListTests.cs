@@ -3,6 +3,7 @@ using MailJet.Client.Request;
 using MailJet.Client.Response.Data;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MailJet.Client.Tests
@@ -342,6 +343,32 @@ namespace MailJet.Client.Tests
             Assert.IsNotNull(result.Data);
             Assert.AreEqual(result.Count, result.Data.Count);
             Assert.IsTrue(result.Data.All(x => x.IsUnsubscribed));
+        }
+
+        [TestCase(true)]
+        public void ContactDataUpdate_ById(bool firstrun)
+        {
+            try
+            {
+                var result = _client.GetListRecipient();
+                var item = result.Data.First();
+                var data = _client.UpdateContactData(item.ContactID, new Dictionary<string, string>()
+                {
+                    { "Blah", String.Format("Updated: {0:ddMMyy hhmmss}", DateTime.UtcNow) }
+                });
+            }
+            catch (InvalidOperationException)
+            {
+                if (firstrun)
+                {
+                    CreateContactForList();
+                    ContactDataUpdate_ById(false);
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
     }
 }

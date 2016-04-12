@@ -1,10 +1,13 @@
-﻿using MailJet.Client.Enum;
+﻿using MailJet.Client.Converters;
+using MailJet.Client.Enum;
 using MailJet.Client.Request;
 using MailJet.Client.Response;
 using MailJet.Client.Response.Data;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -64,14 +67,47 @@ namespace MailJet.Client
             ExecuteRequest(request);
         }
 
+        public Response<ContactDataUpdate> UpdateContactData(long ContactID, Dictionary<string, string> Data)
+        {
+            var request = new RestRequest("REST/contactdata/{id}", Method.PUT);
+            request.AddParameter("id", ContactID, ParameterType.UrlSegment);
+
+            var TData = TKEYVALUELIST.FromDictionary(Data);
+            var d = new { Data = TData };
+            request.AddJsonBody(d);
+            return ExecuteRequest<ContactDataUpdate>(request);
+        }
+
+        public Response<ContactDataUpdate> UpdateContactData(string Email, Dictionary<string, string> Data)
+        {
+            var request = new RestRequest("REST/contactdata/{email}", Method.PUT);
+            request.AddParameter("email", Email, ParameterType.UrlSegment);
+
+            var TData = TKEYVALUELIST.FromDictionary(Data);
+            var d = new { Data = TData };
+            request.AddJsonBody(d);
+            return ExecuteRequest<ContactDataUpdate>(request);
+        }
+
+
         public Response<ContactData> CreateContactForList(long ID, Contact contact)
         {
             var request = new RestRequest("REST/contactslist/{id}/managecontact", Method.POST);
             request.AddParameter("id", ID, ParameterType.UrlSegment);
-            request.AddParameter("name", contact.Name, ParameterType.GetOrPost);
-            request.AddParameter("email", contact.Email, ParameterType.GetOrPost);
-            request.AddParameter("properties", contact.Properties, ParameterType.GetOrPost);
-            request.AddParameter("action", System.Enum.GetName(typeof(CreateContactAction), contact.Action), ParameterType.GetOrPost);
+            request.JsonSerializer = NewtonsoftJsonSerializer.Default;
+            JObject o = new JObject();
+            o.Add("name", contact.Name);
+            o.Add("email", contact.Email);
+            o.Add("action", System.Enum.GetName(typeof(CreateContactAction), contact.Action));
+
+            JObject p = new JObject();
+            foreach (var i in contact.Properties)
+            {
+                p.Add(i.Name, i.Value);
+            }
+            o.Add("properties", p);
+
+            request.AddJsonBody(o);
 
             return ExecuteRequest<ContactData>(request);
         }
@@ -437,9 +473,10 @@ namespace MailJet.Client
         private Response<T> ExecuteRequest<T>(RestRequest request) where T : DataItem
         {
             request.RequestFormat = DataFormat.Json;
+            request.JsonSerializer = NewtonsoftJsonSerializer.Default;
             var result = WebClient.Execute(request);
 
-            if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.NoContent)
+            if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
                 return null;
 
             var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
@@ -453,6 +490,7 @@ namespace MailJet.Client
         private void ExecuteRequest(RestRequest request)
         {
             request.RequestFormat = DataFormat.Json;
+            request.JsonSerializer = NewtonsoftJsonSerializer.Default;
             var result = WebClient.Execute(request);
 
             if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.NoContent)
