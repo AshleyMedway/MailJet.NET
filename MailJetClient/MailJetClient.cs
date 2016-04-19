@@ -67,7 +67,7 @@ namespace MailJet.Client
             ExecuteRequest(request);
         }
 
-        public Response<ContactDataUpdate> UpdateContactData(long ContactID, Dictionary<string, string> Data)
+        public Response<ContactDataUpdate> UpdateContactData(long ContactID, Dictionary<string, object> Data)
         {
             var request = new RestRequest("REST/contactdata/{id}", Method.PUT);
             request.AddParameter("id", ContactID, ParameterType.UrlSegment);
@@ -78,7 +78,7 @@ namespace MailJet.Client
             return ExecuteRequest<ContactDataUpdate>(request);
         }
 
-        public Response<ContactDataUpdate> UpdateContactData(string Email, Dictionary<string, string> Data)
+        public Response<ContactDataUpdate> UpdateContactData(string Email, Dictionary<string, object> Data)
         {
             var request = new RestRequest("REST/contactdata/{email}", Method.PUT);
             request.AddParameter("email", Email, ParameterType.UrlSegment);
@@ -103,7 +103,7 @@ namespace MailJet.Client
             JObject p = new JObject();
             foreach (var i in contact.Properties)
             {
-                p.Add(i.Name, i.Value);
+              p.Add(i.Name, JToken.FromObject(i.Value));
             }
             o.Add("properties", p);
 
