@@ -2,7 +2,5 @@ language: csharp
 solution: MailJet.Client.sln
 install:
   - nuget restore MailJet.Client.sln
-  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
 script:
   - xbuild /p:Configuration=Release MailJet.Client.sln
-  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./MailJet.Client.Tests/bin/Release/MailJet.Client.Tests.dll
