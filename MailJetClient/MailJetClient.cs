@@ -103,7 +103,7 @@ namespace MailJet.Client
             JObject p = new JObject();
             foreach (var i in contact.Properties)
             {
-              p.Add(i.Name, JToken.FromObject(i.Value));
+                p.Add(i.Name, JToken.FromObject(i.Value));
             }
             o.Add("properties", p);
 

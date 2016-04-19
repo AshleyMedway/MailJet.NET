@@ -352,7 +352,7 @@ namespace MailJet.Client.Tests
             {
                 var result = _client.GetListRecipient();
                 var item = result.Data.First();
-                var data = _client.UpdateContactData(item.ContactID, new Dictionary<string, string>()
+                var data = _client.UpdateContactData(item.ContactID, new Dictionary<string, object>()
                 {
                     { "Blah", String.Format("Updated: {0:ddMMyy hhmmss}", DateTime.UtcNow) }
                 });
