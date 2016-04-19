@@ -263,11 +263,6 @@ namespace MailJet.Client
             if (Message.Sender != null && !String.IsNullOrWhiteSpace(Message.Sender.Address))
                 throw new NotImplementedException("Sender Address not yet supported.");
 
-            var response = WebClient.Execute(request);
-
-            if (response.StatusCode != HttpStatusCode.OK)
-                throw response.ErrorException ?? new Exception(response.StatusDescription);
-
             return ExecuteRequest<DataItem>(request);
         }
 
