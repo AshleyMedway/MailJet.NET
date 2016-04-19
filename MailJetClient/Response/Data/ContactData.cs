@@ -8,7 +8,7 @@ namespace MailJet.Client.Response.Data
         public string Email { get; set; }
         public string Name { get; set; }
         public CreateContactAction Action { get; set; }
-        public Dictionary<string, string> Properties { get; set; }
+        public Dictionary<string, object> Properties { get; set; }
 
     }
 }
