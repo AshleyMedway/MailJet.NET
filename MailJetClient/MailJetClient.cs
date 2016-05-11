@@ -6,6 +6,7 @@ using MailJet.Client.Response.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
+using RestSharp.Authenticators;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -243,7 +244,13 @@ namespace MailJet.Client
                     throw new InvalidOperationException("Attachments cannot exceed 15MB. http://dev.mailjet.com/guides/send-api-guide/");
 
                 foreach (var item in Message.Attachments)
-                    request.AddFile("attachment", x => item.ContentStream.CopyTo(x), item.Name);
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        item.ContentStream.CopyTo(ms);
+                        request.AddFile("attachment", ms.ToArray(), item.Name);
+                    }
+                }
             }
 
             var view = Message.AlternateViews.FirstOrDefault();

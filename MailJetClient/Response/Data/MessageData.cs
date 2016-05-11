@@ -13,7 +13,7 @@ namespace MailJet.Client.Response.Data
         public long Delay { get; set; }
         public int DestinationID { get; set; }
         public int FilterTime { get; set; }
-        public long FromID { get; set; }
+        public long SenderID { get; set; }
         public bool IsClickTracked { get; set; }
         public bool IsHtmlPartIncluded { get; set; }
         public bool IsOpenTracked { get; set; }

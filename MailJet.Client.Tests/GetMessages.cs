@@ -97,7 +97,7 @@ namespace MailJet.Client.Tests
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
-            Assert.IsTrue(result.Data.All(x => x.FromID == 3));
+            Assert.IsTrue(result.Data.All(x => x.SenderID == 3));
         }
 
         [Test]
