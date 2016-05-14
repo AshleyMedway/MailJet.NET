@@ -181,6 +181,54 @@ namespace MailJet.Client
             ExecuteRequest(request);
         }
 
+        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
+        {
+            return SendTemplateMessage(TemplateId, new MailAddress[] { To }, From, Subject, Parameters);
+        }
+
+        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress[] To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
+        {
+            if (To == null || To.Any(x => String.IsNullOrWhiteSpace(x.Address)))
+                throw new ArgumentNullException("To", "You must specify the recipient address");
+
+            if (From == null || String.IsNullOrWhiteSpace(From.Address))
+                throw new ArgumentNullException("From", "You must specify the sender");
+
+            if (String.IsNullOrWhiteSpace(Subject))
+                throw new ArgumentNullException("Subject", "You must specify the Subject");
+
+            var request = new RestRequest("send/message", Method.POST)
+            {
+                RequestFormat = DataFormat.Json,
+                JsonSerializer = NewtonsoftJsonSerializer.Default
+            };
+            JObject o = new JObject();
+
+            o.Add("MJ-TemplateID", TemplateId);
+            o.Add("MJ-TemplateLanguage", true);
+            o.Add("Subject", Subject);
+            o.Add("FromEmail", From.Address);
+
+            if (!String.IsNullOrWhiteSpace(From.DisplayName))
+                o.Add("FromName", From.DisplayName);
+
+            o.Add("Recipients", JToken.FromObject(To, NewtonsoftJsonSerializer.Default.Serializer));
+
+            if (Parameters != null && Parameters.Any())
+            {
+                JObject p = new JObject();
+                foreach (var i in Parameters)
+                {
+                    p.Add(i.Key, JToken.FromObject(i.Value));
+                }
+                o.Add("Vars", p);
+            }
+
+            request.AddJsonBody(o);
+
+            return ExecuteRequest<DataItem>(request);
+        }
+
         public Response<DataItem> SendMessage(MailMessage Message)
         {
             var request = new RestRequest("send/message", Method.POST);

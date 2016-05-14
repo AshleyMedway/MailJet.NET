@@ -19,6 +19,14 @@ namespace MailJet.Client.Converters
             set { }
         }
 
+        public Newtonsoft.Json.JsonSerializer Serializer
+        {
+            get
+            {
+                return serializer;
+            }
+        }
+
         public string DateFormat { get; set; }
 
         public string Namespace { get; set; }
@@ -60,6 +68,7 @@ namespace MailJet.Client.Converters
                     NullValueHandling = NullValueHandling.Ignore,
                 };
                 json.Converters.Insert(0, new TKEYVALUELISTConverter());
+                json.Converters.Insert(0, new MailAddressArrayConverter());
                 NewtonsoftJsonSerializer serializer = new NewtonsoftJsonSerializer(json);
                 return serializer;
             }

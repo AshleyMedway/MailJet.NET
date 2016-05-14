@@ -2,6 +2,7 @@
 using MailJet.Client.Response.Data;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -32,6 +33,19 @@ namespace MailJet.Client.Tests
                 throw new InvalidOperationException("Add your MailJet private API Key to the Environment Variable \"MailJetPri\".");
 
             _client = new MailJetClient(publicKey, privateKey);
+        }
+
+        [Test]
+        public void TemplateMessage()
+        {
+            var result = _client.SendTemplateMessage(26171,
+                new MailAddress(ToAddress, "MailJet TO"),
+                new MailAddress(FromAddress, "MailJet From"),
+                "MailJet.NET Template TEST",
+                new Dictionary<string, object>()
+                {
+                    { "FirstName", "Test User Param" }
+                });
         }
 
         [Test]
@@ -114,23 +128,41 @@ namespace MailJet.Client.Tests
             Assert.AreEqual(1, result.Count);
         }
 
+        private string FromAddress
+        {
+            get
+            {
+#if DEBUG
+                var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom", EnvironmentVariableTarget.User);
+#else
+                var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom");
+#endif
+                return testFrom;
+            }
+        }
+
+        private string ToAddress
+        {
+            get
+            {
+#if DEBUG
+                var testTo = Environment.GetEnvironmentVariable("MailJetTestTo", EnvironmentVariableTarget.User);
+#else
+                var testTo = Environment.GetEnvironmentVariable("MailJetTestTo");
+#endif
+                return testTo;
+            }
+        }
+
         private MailMessage BaseMessage()
         {
-#if DEBUG
-            var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom", EnvironmentVariableTarget.User);
-            var testTo = Environment.GetEnvironmentVariable("MailJetTestTo", EnvironmentVariableTarget.User);
-#else
-            var testFrom = Environment.GetEnvironmentVariable("MailJetTestFrom");
-            var testTo = Environment.GetEnvironmentVariable("MailJetTestTo");
-#endif
-
-
             var message = new MailMessage()
             {
-                From = new MailAddress(testFrom),
+                From = new MailAddress(FromAddress),
                 Subject = "test"
             };
-            message.To.Add(new MailAddress(testTo));
+
+            message.To.Add(new MailAddress(ToAddress));
             return message;
         }
     }
