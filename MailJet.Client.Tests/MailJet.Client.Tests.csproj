@@ -40,6 +40,7 @@
     <Compile Include="GetMessages.cs" />
     <Compile Include="SendMail.cs" />
     <Compile Include="AccountTests.cs" />
+    <Compile Include="StatisticsTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

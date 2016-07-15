@@ -1,6 +1,6 @@
 ﻿namespace MailJet.Client.Response.Data
 {
-    public class AggregateGraphStatistics: DataItem
+    public class AggregateGraphStatistics : DataItem
     {
         /// <summary>
         /// Number of blocked messages.
