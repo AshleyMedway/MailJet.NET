@@ -50,6 +50,7 @@
     <Compile Include="MailJetClient.cs" />
     <Compile Include="Request\Contact.cs" />
     <Compile Include="Request\TKEYVALUELIST.cs" />
+    <Compile Include="Response\Data\AggregateGraphStatistics.cs" />
     <Compile Include="Response\Data\ContactData.cs" />
     <Compile Include="Response\Data\ContactDataUpdate.cs" />
     <Compile Include="Response\Data\ContactListData.cs" />

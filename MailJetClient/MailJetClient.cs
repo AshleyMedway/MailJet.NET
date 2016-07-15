@@ -520,6 +520,24 @@ namespace MailJet.Client
             return ExecuteRequest<ListRecipient>(request);
         }
 
+        /// <summary>
+        /// Get aggregate graph statistics available for this apikey.
+        /// </summary>
+        /// <param name="CampaignAggregateID">Only show statistics for this aggregation.</param>
+        /// <param name="Range">The period of the aggregates (24 hours or 7 days).</param>
+        /// <returns>Aggregated campaign statistics grouped over intervals.</returns>
+        public Response<AggregateGraphStatistics> GetAggregateGraphStatistics(int? CampaignAggregateID = null, string Range = null) {
+          var request = new RestRequest("REST/aggregategraphstatistics", Method.GET);
+
+          if (CampaignAggregateID.HasValue)
+            request.AddParameter("CampaignAggregateID", CampaignAggregateID.Value);
+
+          if (!String.IsNullOrWhiteSpace(Range))
+            request.AddParameter("Range", Range);
+
+          return ExecuteRequest<AggregateGraphStatistics>(request);
+        }
+
         private Response<T> ExecuteRequest<T>(RestRequest request) where T : DataItem
         {
             request.RequestFormat = DataFormat.Json;
