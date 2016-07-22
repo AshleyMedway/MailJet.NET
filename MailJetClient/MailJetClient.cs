@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Reflection;
 
 namespace MailJet.Client
 {
@@ -26,7 +27,7 @@ namespace MailJet.Client
             _publicKey = PublicKey;
             _privateKey = PrivateKey;
         }
-
+        #region Contact
         public Response<ContactListData> CreateContactList(string Name)
         {
             var request = new RestRequest("REST/contactslist", Method.POST);
@@ -90,7 +91,6 @@ namespace MailJet.Client
             return ExecuteRequest<ContactDataUpdate>(request);
         }
 
-
         public Response<ContactData> CreateContactForList(long ID, Contact contact)
         {
             var request = new RestRequest("REST/contactslist/{id}/managecontact", Method.POST);
@@ -113,6 +113,74 @@ namespace MailJet.Client
             return ExecuteRequest<ContactData>(request);
         }
 
+
+        /// <summary>
+        /// Manage the relationship between a contact and a contactslists.
+        /// </summary>
+        /// <param name="IsActive">Retrieve only list recipients for which the IsActive property matches the specified value.</param>
+        /// <param name="IsBlocked">Retrieve only list recipients for which the contact's IsBlocked property matches the specified value.</param>
+        /// <param name="ContactId">Only retrieve listrecipient resources for which Contact ID equals the specified value.</param>
+        /// <param name="ContactEmail">Retrieve only list recipients for which the contact's Email property matches the specified value.</param>
+        /// <param name="ContactsListId">Retrieve only list recipients for the specified contact list.</param>
+        /// <param name="IgnoreDeleted">Remove deleted contacts from the resultset.</param>
+        /// <param name="LastActivityAt">Timestamp of last registered activity for this ListRecipient.</param>
+        /// <param name="ListName">Retrieve only list recipients for the specified contact list.</param>
+        /// <param name="IsOpened">Retrieve only list recipients for which the contact has at least an opened email.</param>
+        /// <param name="Status">Retrieve only list recipients for the given status.</param>
+        /// <param name="Unsub">Retrieve only list recipients for which the IsUnsubscribed property matches the specified value.</param>
+        /// <returns></returns>
+        public Response<ListRecipient> GetListRecipient(
+            bool? IsActive = null,
+            bool? IsBlocked = null,
+            long? ContactId = null,
+            string ContactEmail = null,
+            long? ContactsListId = null,
+            bool? IgnoreDeleted = null,
+            DateTime? LastActivityAt = null,
+            string ListName = null,
+            bool? IsOpened = null,
+            string Status = null,
+            bool? Unsub = null)
+        {
+            var request = new RestRequest("REST/listrecipient", Method.GET);
+
+            if (IsActive.HasValue)
+                request.AddQueryParameter("Active", IsActive.Value.ToString());
+
+            if (IsBlocked.HasValue)
+                request.AddQueryParameter("Blocked", IsBlocked.Value.ToString());
+
+            if (ContactId.HasValue)
+                request.AddQueryParameter("Contact", ContactId.Value.ToString());
+
+            if (!String.IsNullOrWhiteSpace(ContactEmail))
+                request.AddQueryParameter("ContactEmail", ContactEmail);
+
+            if (ContactsListId.HasValue)
+                request.AddQueryParameter("ContactsList", ContactsListId.Value.ToString());
+
+            if (IgnoreDeleted.HasValue)
+                request.AddQueryParameter("IgnoreDeleted", IgnoreDeleted.Value.ToString());
+
+            if (LastActivityAt.HasValue)
+                request.AddQueryParameter("LastActivityAt", LastActivityAt.Value.ToString());
+
+            if (!String.IsNullOrWhiteSpace(ListName))
+                request.AddQueryParameter("ListName", ListName);
+
+            if (IsOpened.HasValue)
+                request.AddQueryParameter("Opened", IsOpened.Value.ToString());
+
+            if (!String.IsNullOrWhiteSpace(Status))
+                request.AddQueryParameter("Status", Status);
+
+            if (Unsub.HasValue)
+                request.AddQueryParameter("Unsub", Unsub.Value.ToString());
+
+            return ExecuteRequest<ListRecipient>(request);
+        }
+        #endregion
+        #region ContactMetaData
         public Response<ContactMetadata> GetContactMetaData()
         {
             var request = new RestRequest("REST/contactmetadata", Method.GET);
@@ -181,6 +249,8 @@ namespace MailJet.Client
             ExecuteRequest(request);
         }
 
+        #endregion
+        #region Send
         public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
         {
             return SendTemplateMessage(TemplateId, new MailAddress[] { To }, From, Subject, Parameters);
@@ -321,6 +391,106 @@ namespace MailJet.Client
             return ExecuteRequest<DataItem>(request);
         }
 
+
+        /// <summary>
+        /// TODO : Use all parameters available in data model MailjetSendMail
+        /// </summary>
+        /// <param name="Message">http://dev.mailjet.com/guides/#send-api-json-properties</param>
+        /// <returns></returns>
+        public Response<DataItem> SendMessage(MailjetSendMail Message)
+        {
+            var request = new RestRequest("send/message", Method.POST);
+
+            if (Message.FromEmail == null)
+                throw new InvalidOperationException("You must specify the from address. http://dev.mailjet.com/guides/send-api-guide/");
+
+            if (string.IsNullOrWhiteSpace(Message.Subject))
+                throw new InvalidOperationException("You must specify the subject address. http://dev.mailjet.com/guides/send-api-guide/");
+
+            if (Message.Subject.Length > 255)
+                throw new InvalidOperationException("The subject cannot be longer than 255 characters. http://dev.mailjet.com/guides/send-api-guide/");
+
+            //if (Message.Recipients != null && !string.IsNullOrWhiteSpace(Message.Recipients.First().Email))
+            //    throw new NotImplementedException("Sender Email not yet supported.");
+
+            int recipientsCount = Message.Recipients.Count();
+
+            if (recipientsCount == 0)
+                throw new InvalidOperationException("Must have at least one recipient. http://dev.mailjet.com/guides/send-api-guide/");
+
+            if (recipientsCount > 50)
+                throw new InvalidOperationException("Max Recipients is 50. http://dev.mailjet.com/guides/send-api-guide/");
+
+            if (string.IsNullOrWhiteSpace(Message.FromName))
+                request.AddParameter("from", Message.FromEmail);
+            else
+                request.AddParameter("from", string.Format("{0} <{1}>", Message.FromName, Message.FromEmail));
+
+            request.AddParameter("subject", Message.Subject);
+
+            foreach (var address in Message.Recipients)
+            {
+                if (string.IsNullOrWhiteSpace(address.Name))
+                    request.AddParameter("to", address.Email);
+                else
+                    request.AddParameter("to", string.Format("\"{0}\" <{1}>", address.Name, address.Email));
+            }
+
+            if (Message.Cc != null)
+            {
+                foreach (var address in Message.Cc)
+                {
+                    if (String.IsNullOrWhiteSpace(address.Name))
+                        request.AddParameter("to", address.Email);
+                    else
+                        request.AddParameter("to", String.Format("\"{0}\" <{1}>", address.Name, address.Email));
+                }
+            }
+
+            if (Message.Bcc != null)
+            {
+                foreach (var address in Message.Bcc)
+                {
+                    if (String.IsNullOrWhiteSpace(address.Name))
+                        request.AddParameter("to", address.Email);
+                    else
+                        request.AddParameter("to", String.Format("\"{0}\" <{1}>", address.Name, address.Email));
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(Message.HtmlPart))
+                request.AddParameter("html", Message.HtmlPart);
+
+            if (!string.IsNullOrWhiteSpace(Message.Textpart))
+                request.AddParameter("text", Message.Textpart);
+
+            if (Message.Attachments != null)
+            {
+                if (Message.Attachments.Sum(x => x.Content.Length) > 15000000)
+                    throw new InvalidOperationException("Attachments cannot exceed 15MB. http://dev.mailjet.com/guides/send-api-guide/");
+
+                foreach (var item in Message.Attachments)
+                {
+                    request.AddParameter("attachment", item);
+                }
+            }
+
+            //-- Custom parameter managemement 
+            if (! string.IsNullOrWhiteSpace(Message.MjCampaign))
+                request.AddParameter("Mj-campaign", Message.MjCampaign);
+
+            if (Message.MjDeduplicateCampaign == 1)
+                request.AddParameter("Mj-deduplicatecampaign", Message.MjDeduplicateCampaign);
+            
+
+            //request.AddJsonBody(Message);
+
+            return ExecuteRequest<DataItem>(request);
+        }
+
+
+        #endregion
+        #region Message
         public Response<MessageData> GetMessageHistory(long MessageId)
         {
             var request = new RestRequest("REST/messagehistory/{id}", Method.GET);
@@ -376,6 +546,8 @@ namespace MailJet.Client
             return ExecuteRequest<MessageData>(request);
         }
 
+        #endregion
+        #region Account
         public Response<DNSData> GetDNS(string Domain)
         {
             var request = new RestRequest("REST/dns/{domain}", Method.GET);
@@ -454,89 +626,93 @@ namespace MailJet.Client
             return ExecuteRequest<MetaSenderData>(request);
         }
 
-        /// <summary>
-        /// Manage the relationship between a contact and a contactslists.
-        /// </summary>
-        /// <param name="IsActive">Retrieve only list recipients for which the IsActive property matches the specified value.</param>
-        /// <param name="IsBlocked">Retrieve only list recipients for which the contact's IsBlocked property matches the specified value.</param>
-        /// <param name="ContactId">Only retrieve listrecipient resources for which Contact ID equals the specified value.</param>
-        /// <param name="ContactEmail">Retrieve only list recipients for which the contact's Email property matches the specified value.</param>
-        /// <param name="ContactsListId">Retrieve only list recipients for the specified contact list.</param>
-        /// <param name="IgnoreDeleted">Remove deleted contacts from the resultset.</param>
-        /// <param name="LastActivityAt">Timestamp of last registered activity for this ListRecipient.</param>
-        /// <param name="ListName">Retrieve only list recipients for the specified contact list.</param>
-        /// <param name="IsOpened">Retrieve only list recipients for which the contact has at least an opened email.</param>
-        /// <param name="Status">Retrieve only list recipients for the given status.</param>
-        /// <param name="Unsub">Retrieve only list recipients for which the IsUnsubscribed property matches the specified value.</param>
-        /// <returns></returns>
-        public Response<ListRecipient> GetListRecipient(
-            bool? IsActive = null,
-            bool? IsBlocked = null,
-            long? ContactId = null,
-            string ContactEmail = null,
-            long? ContactsListId = null,
-            bool? IgnoreDeleted = null,
-            DateTime? LastActivityAt = null,
-            string ListName = null,
-            bool? IsOpened = null,
-            string Status = null,
-            bool? Unsub = null)
+        #endregion
+
+        #region Campaign
+
+
+
+        public Response<CampaignAggregate> GetCampaignAggregates(
+           long? ContactFilterId = null,
+           long? ContactsListId = null,
+           long? SenderId = null)
         {
-            var request = new RestRequest("REST/listrecipient", Method.GET);
+            var request = new RestRequest("REST/campaignaggregate", Method.GET);
 
-            if (IsActive.HasValue)
-                request.AddQueryParameter("Active", IsActive.Value.ToString());
-
-            if (IsBlocked.HasValue)
-                request.AddQueryParameter("Blocked", IsBlocked.Value.ToString());
-
-            if (ContactId.HasValue)
-                request.AddQueryParameter("Contact", ContactId.Value.ToString());
-
-            if (!String.IsNullOrWhiteSpace(ContactEmail))
-                request.AddQueryParameter("ContactEmail", ContactEmail);
+            if (ContactFilterId.HasValue)
+                request.AddQueryParameter("ContactFilter", ContactFilterId.Value.ToString());
 
             if (ContactsListId.HasValue)
                 request.AddQueryParameter("ContactsList", ContactsListId.Value.ToString());
 
-            if (IgnoreDeleted.HasValue)
-                request.AddQueryParameter("IgnoreDeleted", IgnoreDeleted.Value.ToString());
+            if (SenderId.HasValue)
+                request.AddQueryParameter("Sender", SenderId.Value.ToString());
 
-            if (LastActivityAt.HasValue)
-                request.AddQueryParameter("LastActivityAt", LastActivityAt.Value.ToString());
-
-            if (!String.IsNullOrWhiteSpace(ListName))
-                request.AddQueryParameter("ListName", ListName);
-
-            if (IsOpened.HasValue)
-                request.AddQueryParameter("Opened", IsOpened.Value.ToString());
-
-            if (!String.IsNullOrWhiteSpace(Status))
-                request.AddQueryParameter("Status", Status);
-
-            if (Unsub.HasValue)
-                request.AddQueryParameter("Unsub", Unsub.Value.ToString());
-
-            return ExecuteRequest<ListRecipient>(request);
+            return ExecuteRequest<CampaignAggregate>(request);
         }
 
+        public Response<CampaignAggregate> CreateCampaignAggregates(CampaignAggregate CampaignAggregate)
+        {
+            if (CampaignAggregate.Name.Any(x => x == ' '))
+            {
+                throw new InvalidOperationException("Name cannot contain a space");
+            }
+            var request = new RestRequest("REST/campaignaggregate", Method.POST);
+
+            //if (!string.IsNullOrWhiteSpace(CampaignAggregate.Name))
+            //    request.AddParameter("name", CampaignAggregate.Name, ParameterType.GetOrPost);
+
+            //if (!string.IsNullOrWhiteSpace(CampaignAggregate.CampaignIDS))
+            //    request.AddParameter("CampaignIDS", CampaignAggregate.CampaignIDS, ParameterType.GetOrPost);
+
+            foreach (var propertyInfo in CampaignAggregate.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if ((propertyInfo.Name != "ID") && (propertyInfo.GetValue(CampaignAggregate) != null) && (!string.IsNullOrWhiteSpace(propertyInfo.GetValue(CampaignAggregate).ToString())))
+                    request.AddParameter(propertyInfo.Name, propertyInfo.GetValue(CampaignAggregate).ToString(), ParameterType.GetOrPost);
+
+            }
+
+            return ExecuteRequest<CampaignAggregate>(request);
+        }
+
+
+        #endregion
+        #region Statistics
         /// <summary>
         /// Get aggregate graph statistics available for this apikey.
         /// </summary>
         /// <param name="CampaignAggregateID">Only show statistics for this aggregation.</param>
-        /// <param name="Range">The period of the aggregates (24 hours or 7 days).</param>
+        /// <param name="Range">The period of the aggregates (24 hours or 7 days). Allowed values: "7d" or "24h"</param>
         /// <returns>Aggregated campaign statistics grouped over intervals.</returns>
-        public Response<AggregateGraphStatistics> GetAggregateGraphStatistics(int? CampaignAggregateID = null, string Range = null) {
-          var request = new RestRequest("REST/aggregategraphstatistics", Method.GET);
+        public Response<AggregateGraphStatistics> GetAggregateGraphStatistics(int? CampaignAggregateID = null, string Range = null)
+        {
+            var request = new RestRequest("REST/aggregategraphstatistics", Method.GET);
 
-          if (CampaignAggregateID.HasValue)
-            request.AddParameter("CampaignAggregateID", CampaignAggregateID.Value);
+            if (CampaignAggregateID.HasValue)
+                request.AddParameter("CampaignAggregateID", CampaignAggregateID.Value);
 
-          if (!String.IsNullOrWhiteSpace(Range))
-            request.AddParameter("Range", Range);
+            if (!String.IsNullOrWhiteSpace(Range))
+                request.AddParameter("Range", Range);
 
-          return ExecuteRequest<AggregateGraphStatistics>(request);
+            return ExecuteRequest<AggregateGraphStatistics>(request);
         }
+
+        public Response<AggregateGraphStatistics> GetGraphStatistics(int? CampaignID = null, string CampaignStatus = null)
+        {
+            var request = new RestRequest("REST/graphstatistics", Method.GET);
+
+            if (CampaignID.HasValue)
+                request.AddParameter("CampaignID", CampaignID.Value);
+
+            if (!String.IsNullOrWhiteSpace(CampaignStatus))
+                request.AddParameter("CampaignStatus", CampaignStatus);
+
+            return ExecuteRequest<AggregateGraphStatistics>(request);
+        }
+
+
+
+        #endregion
 
         private Response<T> ExecuteRequest<T>(RestRequest request) where T : DataItem
         {

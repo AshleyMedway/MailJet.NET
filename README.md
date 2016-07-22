@@ -30,3 +30,26 @@ If there is a specific feature of the API you would like please create an issue 
     client.SendMessage(new System.Net.Mail.MailMessage("from@email.com", "to@email.com", "subject", "email body"));
 
 For a more detailed usage you can see the [SendMail](https://github.com/AshleyMedway/MailJet.NET/blob/master/MailJet.Client.Tests/SendMail.cs) UnitTests.
+
+
+###Pre requiries
+Install NUnit Test Adapter to run test
+From Extension and update in VS
+Documentation
+http://nunit.org/index.php?p=vsTestAdapter&r=2.6.4
+
+
+
+###Mailjet API
+
+http://dev.mailjet.com/
+
+http://dev.mailjet.com/email-api/v3/message/
+
+http://dev.mailjet.com/guides/#choose-sending-method
+
+
+
+
+
+
