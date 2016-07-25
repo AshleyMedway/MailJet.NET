@@ -88,7 +88,7 @@ namespace MailJet.Client.Response.Data
         /// </summary>
         /// <see cref="https://app.mailjet.com/docs/emails_headers"/>
         [JsonProperty("Mj-trackopen")]
-        public int MjTrackopen { get; set; }
+        public int MjTrackOpen { get; set; }
 
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace MailJet.Client.Response.Data
         /// </summary>
         /// <see cref="https://app.mailjet.com/docs/emails_headers"/>
         [JsonProperty("Mj-trackclick")]
-        public int MjTrackclick { get; set; }
+        public int MjTrackClick { get; set; }
 
         /// <summary>
         /// Attach a custom ID to the message

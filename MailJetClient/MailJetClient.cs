@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
+using System.Text;
 
 namespace MailJet.Client
 {
@@ -471,17 +472,30 @@ namespace MailJet.Client
 
                 foreach (var item in Message.Attachments)
                 {
-                    request.AddParameter("attachment", item);
+
+                    byte[] newByteArray = Encoding.Default.GetBytes(item.Content);
+                    //byte[] newByteArray = Encoding.Default.GetBytes(Convert.ToBase64String(array));
+
+                    request.AddFile("attachment", newByteArray, item.Filename, item.ContentType);
+
                 }
             }
 
             //-- Custom parameter managemement 
-            if (! string.IsNullOrWhiteSpace(Message.MjCampaign))
+            if (!string.IsNullOrWhiteSpace(Message.MjCampaign))
                 request.AddParameter("Mj-campaign", Message.MjCampaign);
 
             if (Message.MjDeduplicateCampaign == 1)
                 request.AddParameter("Mj-deduplicatecampaign", Message.MjDeduplicateCampaign);
-            
+
+            if (Message.MjTrackOpen != 0)
+                request.AddParameter("Mj-trackopen", Message.MjTrackOpen);
+
+            if (Message.MjTrackClick != 0)
+                request.AddParameter("Mj-trackclick", Message.MjTrackClick);
+
+            if (Message.MjCustomID != 0)
+                request.AddParameter("Mj-MjCustomID", Message.MjCustomID);
 
             //request.AddJsonBody(Message);
 
@@ -630,7 +644,32 @@ namespace MailJet.Client
 
         #region Campaign
 
+        public Response<Campaign> GetCampaign(string CampaignId)
+        {
+            var request = new RestRequest("REST/campaign/{id}", Method.GET);
+            request.AddParameter("id", CampaignId, ParameterType.UrlSegment);
+           
+            return ExecuteRequest<Campaign>(request);
+        }
 
+        public Response<Campaign> GetCampaigns(
+          long? ContactFilterId = null,
+          long? ContactsListId = null,
+          long? SenderId = null)
+        {
+            var request = new RestRequest("REST/campaign", Method.GET);
+
+            if (ContactFilterId.HasValue)
+                request.AddQueryParameter("ContactFilter", ContactFilterId.Value.ToString());
+
+            if (ContactsListId.HasValue)
+                request.AddQueryParameter("ContactsList", ContactsListId.Value.ToString());
+
+            if (SenderId.HasValue)
+                request.AddQueryParameter("Sender", SenderId.Value.ToString());
+
+            return ExecuteRequest<Campaign>(request);
+        }
 
         public Response<CampaignAggregate> GetCampaignAggregates(
            long? ContactFilterId = null,
@@ -667,7 +706,7 @@ namespace MailJet.Client
 
             foreach (var propertyInfo in CampaignAggregate.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if ((propertyInfo.Name != "ID") && (propertyInfo.GetValue(CampaignAggregate) != null) && (!string.IsNullOrWhiteSpace(propertyInfo.GetValue(CampaignAggregate).ToString())))
+                if ((propertyInfo.GetValue(CampaignAggregate) != null) && (!string.IsNullOrWhiteSpace(propertyInfo.GetValue(CampaignAggregate).ToString())) && (propertyInfo.GetValue(CampaignAggregate).ToString() != "0"))
                     request.AddParameter(propertyInfo.Name, propertyInfo.GetValue(CampaignAggregate).ToString(), ParameterType.GetOrPost);
 
             }

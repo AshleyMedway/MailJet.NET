@@ -36,22 +36,35 @@ namespace MailJet.Client.Tests
         /// <summary>
         /// The period of the aggregates (24 hours or 7 days). Allowed values: "7d" or "24h"
         /// </summary>
+        /// <remarks>
+        /// Use  Test Name:	Mailjet_MailMessage_... to get sent mail and have a sample data
+        /// </remarks>
         [Test]
         public void GetAggregateGraphStatistics()
         {
             //-- Get last message campaign id
-            var message = _client.GetMessages().Data.First();
+            //var message = _client.GetMessages().Data.First();
+            var campaign = _client.GetCampaign(string.Format("TestApi_{0}-{1}", DateTime.Now.Year, DateTime.Now.Month));
+            
+            if (campaign.Data != null)
+            {
+                //-- Create CampaignAggregate from campaign id
+                CampaignAggregate lRequestCampaignAggregate = new CampaignAggregate();
+                lRequestCampaignAggregate.CampaignIDS = campaign.Data.First().ID.ToString();
+                lRequestCampaignAggregate.Name = string.Format("Campaign-{0}", campaign.Data.First().ID);
 
-            //-- Create CampaignAggregate from campaign id
-            CampaignAggregate lRequestCampaignAggregate = new CampaignAggregate();
-            lRequestCampaignAggregate.CampaignIDS = message.CampaignID.ToString();
-            lRequestCampaignAggregate.Name = string.Format("Message-{0}", message.ID);
+                var lResponseCampaignAggregate = _client.CreateCampaignAggregates(lRequestCampaignAggregate);
 
-            var lResponseCampaignAggregate = _client.CreateCampaignAggregates(lRequestCampaignAggregate);
-
-            //-- Request statistic Api from campaign aggreate id
-            var result = _client.GetAggregateGraphStatistics(Convert.ToInt32(lResponseCampaignAggregate.Data.First().ID), "7d");
-            Assert.IsNotNull(result);
+                //-- Request statistic Api from campaign aggreate id
+                var result = _client.GetAggregateGraphStatistics(Convert.ToInt32(lResponseCampaignAggregate.Data.First().ID), "24h"); //"7d"
+                Assert.IsNotNull(result);
+                
+            }
+            else
+            {
+                Assert.Fail("Please check that your send mail before invoking this test method");
+            }
+           
         }
     }
 }

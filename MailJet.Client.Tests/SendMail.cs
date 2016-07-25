@@ -145,8 +145,49 @@ namespace MailJet.Client.Tests
         public void Mailjet_MailMessage_Html_NoAttachements()
         {
             var message = BaseMailjetMessage();
-            message.HtmlPart = "<b>TEST MAiljet</b>";
+            message.HtmlPart = "<b>TEST Mailjet without attachement</b>";
             message.MjCampaign = string.Format("TestApi_{0}-{1}", DateTime.Now.Year, DateTime.Now.Month);
+            var result = _client.SendMessage(message);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count);
+        }
+
+        [Test]
+        public void Mailjet_MailMessage_Html_WithAttachements()
+        {
+            var message = BaseMailjetMessage();
+            message.HtmlPart = "<b>TEST Mailjet with attachement</b> <br /> <a href='http://www.bing.com'>Click me</a>";
+            message.MjCampaign = string.Format("TestApi_{0}-{1}", DateTime.Now.Year, DateTime.Now.Month);
+            message.MjTrackClick = 2; //default value = 1
+            message.MjTrackOpen = 2; //default value = 2
+            message.MjCustomID = 100;
+
+            //-- Attachement
+            var path = Path.Combine(Environment.CurrentDirectory, "TestData", "TextFile.txt");
+            //var file = File.Open(path, FileMode.Open);
+            var mailjetAttachment = new MailjetAttachment();
+            mailjetAttachment.Content = File.ReadAllText(path);
+            mailjetAttachment.Filename = "TextFile.txt";
+            mailjetAttachment.ContentType = ".txt";
+            message.Attachments = new List<MailjetAttachment>();
+            message.Attachments.Add(mailjetAttachment);
+
+            var result = _client.SendMessage(message);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count);
+        }
+
+        /// <summary>
+        /// TODO : Convert Mail message to mailjet in the constructor
+        /// </summary>
+        public void Mailjet_MailMessage_Html_Convert_NoAttachements()
+        {
+            var message = BaseMessage();
+            message.Body = "<b>TEST</b>";
+            message.IsBodyHtml = true;
+
+            var maijetMessage = new MailjetSendMail(message);
+
             var result = _client.SendMessage(message);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.Count);
