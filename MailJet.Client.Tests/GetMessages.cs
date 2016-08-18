@@ -28,14 +28,21 @@ namespace MailJet.Client.Tests
             _client = new MailJetClient(publicKey, privateKey);
         }
 
-        [Test]
-        public void GetMessage_Test()
+        [TestCase(null)]
+        [TestCase(19421847485368716)]
+        public void GetMessage_Test(long? pMessageID = null)
         {
-            var message = _client.GetMessages().Data.First();
-            var result = _client.GetMessage(message.ID);
+            if (!pMessageID.HasValue)
+            {
+                var message = _client.GetMessages().Data.First();
+                pMessageID = message.ID;
+            }
+
+            var result = _client.GetMessage(pMessageID.GetValueOrDefault());
             Assert.IsNotNull(result);
-            Assert.AreEqual(message.ID, result.Data.Single().ID);
+            Assert.AreEqual(pMessageID, result.Data.Single().ID);
         }
+
 
         [Test]
         public void GetMessages_Test()
