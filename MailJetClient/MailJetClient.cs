@@ -68,7 +68,7 @@ namespace MailJet.Client
             ExecuteRequest(request);
         }
 
-        public Response<ContactDataUpdate> UpdateContactData(long ContactID, Dictionary<string, object> Data)
+        public Response<ContactData> UpdateContactData(long ContactID, Dictionary<string, object> Data)
         {
             var request = new RestRequest("REST/contactdata/{id}", Method.PUT);
             request.AddParameter("id", ContactID, ParameterType.UrlSegment);
@@ -76,10 +76,10 @@ namespace MailJet.Client
             var TData = TKEYVALUELIST.FromDictionary(Data);
             var d = new { Data = TData };
             request.AddJsonBody(d);
-            return ExecuteRequest<ContactDataUpdate>(request);
+            return ExecuteRequest<ContactData>(request);
         }
 
-        public Response<ContactDataUpdate> UpdateContactData(string Email, Dictionary<string, object> Data)
+        public Response<ContactData> UpdateContactData(string Email, Dictionary<string, object> Data)
         {
             var request = new RestRequest("REST/contactdata/{email}", Method.PUT);
             request.AddParameter("email", Email, ParameterType.UrlSegment);
@@ -87,11 +87,11 @@ namespace MailJet.Client
             var TData = TKEYVALUELIST.FromDictionary(Data);
             var d = new { Data = TData };
             request.AddJsonBody(d);
-            return ExecuteRequest<ContactDataUpdate>(request);
+            return ExecuteRequest<ContactData>(request);
         }
 
 
-        public Response<ContactData> CreateContactForList(long ID, Contact contact)
+        public Response<ContactResponse> CreateContactForList(long ID, Contact contact)
         {
             var request = new RestRequest("REST/contactslist/{id}/managecontact", Method.POST);
             request.AddParameter("id", ID, ParameterType.UrlSegment);
@@ -110,7 +110,7 @@ namespace MailJet.Client
 
             request.AddJsonBody(o);
 
-            return ExecuteRequest<ContactData>(request);
+            return ExecuteRequest<ContactResponse>(request);
         }
 
         public Response<ContactMetadata> GetContactMetaData()
@@ -447,11 +447,11 @@ namespace MailJet.Client
             return ExecuteRequest<MetaSenderData>(request);
         }
 
-        public Response<MetaSenderData> GetContactData(long ID)
+        public Response<ContactData> GetContactData(long ID)
         {
             var request = new RestRequest("REST/contactdata/{id}", Method.GET);
             request.AddParameter("id", ID, ParameterType.UrlSegment);
-            return ExecuteRequest<MetaSenderData>(request);
+            return ExecuteRequest<ContactData>(request);
         }
 
         /// <summary>
