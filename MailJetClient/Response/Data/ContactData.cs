@@ -1,13 +1,11 @@
-﻿using MailJet.Client.Enum;
+﻿using MailJet.Client.Request;
 using System.Collections.Generic;
 
 namespace MailJet.Client.Response.Data
 {
     public class ContactData : DataItem
     {
-        public string Email { get; set; }
-        public string Name { get; set; }
-        public CreateContactAction Action { get; set; }
-        public Dictionary<string, object> Properties { get; set; }
+        public long ContactID { get; set; }
+        public List<TKEYVALUELIST> Data { get; set; }
     }
 }
