@@ -423,6 +423,20 @@ namespace MailJet.Client
             return ExecuteRequest<MetaSenderData>(request);
         }
 
+        public Response<TemplateData> GetTemplate(long ID)
+        {
+            var request = new RestRequest("REST/template/{id}", Method.GET);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            return ExecuteRequest<TemplateData>(request);
+        }
+
+        public Response<TemplateContent> GetTemplateContent(long ID)
+        {
+            var request = new RestRequest("REST/template/{id}/detailcontent", Method.GET);
+            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            return ExecuteRequest<TemplateContent>(request);
+        }
+
         public Response<MetaSenderData> CreateMetaSender(string Email, string Description = null)
         {
             var request = new RestRequest("REST/metasender", Method.POST);
