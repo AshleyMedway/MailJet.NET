@@ -430,6 +430,13 @@ namespace MailJet.Client
             return ExecuteRequest<TemplateData>(request);
         }
 
+        public Response<TemplateData> GetTemplate(string name)
+        {
+            var request = new RestRequest("REST/template", Method.GET);
+            request.AddParameter("name", name, ParameterType.QueryString);
+            return ExecuteRequest<TemplateData>(request);
+        }
+
         public Response<TemplateContent> GetTemplateContent(long ID)
         {
             var request = new RestRequest("REST/template/{id}/detailcontent", Method.GET);
