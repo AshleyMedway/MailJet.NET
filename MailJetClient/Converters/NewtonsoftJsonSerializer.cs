@@ -6,11 +6,9 @@ namespace MailJet.Client.Converters
 {
     public class NewtonsoftJsonSerializer : ISerializer
     {
-        private Newtonsoft.Json.JsonSerializer serializer;
-
         public NewtonsoftJsonSerializer(Newtonsoft.Json.JsonSerializer serializer)
         {
-            this.serializer = serializer;
+            Serializer = serializer;
         }
 
         public string ContentType
@@ -19,13 +17,7 @@ namespace MailJet.Client.Converters
             set { }
         }
 
-        public Newtonsoft.Json.JsonSerializer Serializer
-        {
-            get
-            {
-                return serializer;
-            }
-        }
+        public Newtonsoft.Json.JsonSerializer Serializer { get; }
 
         public string DateFormat { get; set; }
 
@@ -35,11 +27,11 @@ namespace MailJet.Client.Converters
 
         public string Serialize(object obj)
         {
-            using (var stringWriter = new StringWriter())
+            using (StringWriter stringWriter = new StringWriter())
             {
-                using (var jsonTextWriter = new JsonTextWriter(stringWriter))
+                using (JsonTextWriter jsonTextWriter = new JsonTextWriter(stringWriter))
                 {
-                    serializer.Serialize(jsonTextWriter, obj);
+                    Serializer.Serialize(jsonTextWriter, obj);
 
                     return stringWriter.ToString();
                 }
@@ -48,13 +40,13 @@ namespace MailJet.Client.Converters
 
         public T Deserialize<T>(RestSharp.IRestResponse response)
         {
-            var content = response.Content;
+            string content = response.Content;
 
-            using (var stringReader = new StringReader(content))
+            using (StringReader stringReader = new StringReader(content))
             {
-                using (var jsonTextReader = new JsonTextReader(stringReader))
+                using (JsonTextReader jsonTextReader = new JsonTextReader(stringReader))
                 {
-                    return serializer.Deserialize<T>(jsonTextReader);
+                    return Serializer.Deserialize<T>(jsonTextReader);
                 }
             }
         }

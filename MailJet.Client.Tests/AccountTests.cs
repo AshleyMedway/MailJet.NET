@@ -32,7 +32,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetAllDNS()
         {
-            var result = _client.GetDNS();
+            var result = _client.GetDns();
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -41,8 +41,8 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetSingleDNS_ById()
         {
-            var data = _client.GetDNS().Data.First();
-            var result = _client.GetDNS(data.ID);
+            var data = _client.GetDns().Data.First();
+            var result = _client.GetDns(data.ID);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, 1);
@@ -52,8 +52,8 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetSingleDNS_ByDomain()
         {
-            var data = _client.GetDNS().Data.First();
-            var result = _client.GetDNS(data.Domain);
+            var data = _client.GetDns().Data.First();
+            var result = _client.GetDns(data.Domain);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(data.Domain, result.Data[0].Domain);
@@ -64,8 +64,8 @@ namespace MailJet.Client.Tests
         [Test]
         public void ForceDNSRecheck()
         {
-            var data = _client.GetDNS().Data.First();
-            var result = _client.ForceDNSRecheck(data.ID);
+            var data = _client.GetDns().Data.First();
+            var result = _client.ForceDnsRecheck(data.ID);
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Count, 1);
             Assert.AreEqual(result.Data.Count, 1);
@@ -116,7 +116,7 @@ namespace MailJet.Client.Tests
                 sender = _client.GetMetaSender().Data.FirstOrDefault();
             }
 
-            var result = _client.UpdateMetaSender(sender.ID, Description: Guid.NewGuid().ToString(), IsEnabled: false);
+            var result = _client.UpdateMetaSender(sender.ID, description: Guid.NewGuid().ToString(), isEnabled: false);
 
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Data.Single().ID, sender.ID);

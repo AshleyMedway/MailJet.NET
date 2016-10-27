@@ -189,7 +189,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void ListRecipient_IsActive()
         {
-            var result = _client.GetListRecipient(IsActive: true);
+            var result = _client.GetListRecipient(isActive: true);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -210,7 +210,7 @@ namespace MailJet.Client.Tests
             {
                 var result = _client.GetListRecipient();
                 var item = result.Data.First();
-                var api = _client.GetListRecipient(ContactId: item.ContactID);
+                var api = _client.GetListRecipient(contactId: item.ContactID);
                 Assert.IsNotNull(api);
                 Assert.IsNotNull(api.Data);
                 Assert.AreEqual(api.Count, api.Data.Count);
@@ -237,7 +237,7 @@ namespace MailJet.Client.Tests
             //var result = _client.GetListRecipient();
             //var item = result.Data.First();
             //TODO: remove hardcoded test
-            var api = _client.GetListRecipient(ContactEmail: "test_33a8282d-e66e-4dab-86c9-1fcc548cba55@mailjet.net");
+            var api = _client.GetListRecipient(contactEmail: "test_33a8282d-e66e-4dab-86c9-1fcc548cba55@mailjet.net");
             Assert.IsNotNull(api);
             Assert.IsNotNull(api.Data);
             Assert.AreEqual(api.Count, api.Data.Count);
@@ -250,7 +250,7 @@ namespace MailJet.Client.Tests
         {
             var result = _client.GetListRecipient();
             var item = result.Data.First();
-            var api = _client.GetListRecipient(ContactsListId: item.ListID);
+            var api = _client.GetListRecipient(contactsListId: item.ListID);
             Assert.IsNotNull(api);
             Assert.IsNotNull(api.Data);
             Assert.AreEqual(api.Count, api.Data.Count);
@@ -262,7 +262,7 @@ namespace MailJet.Client.Tests
         {
             var result = _client.GetListRecipient();
             var item = result.Data.First();
-            var api = _client.GetListRecipient(ContactsListId: item.ListID, ContactId: item.ContactID);
+            var api = _client.GetListRecipient(contactsListId: item.ListID, contactId: item.ContactID);
             Assert.IsNotNull(api);
             Assert.IsNotNull(api.Data);
             Assert.AreEqual(api.Count, api.Data.Count);
@@ -275,7 +275,7 @@ namespace MailJet.Client.Tests
         {
             var result = _client.GetListRecipient();
             var item = result.Data.First();
-            var api = _client.GetListRecipient(ContactsListId: item.ListID, ContactId: item.ContactID, Unsub: false);
+            var api = _client.GetListRecipient(contactsListId: item.ListID, contactId: item.ContactID, unsub: false);
             Assert.IsNotNull(api);
             Assert.IsNotNull(api.Data);
             Assert.AreEqual(api.Count, api.Data.Count);
@@ -303,7 +303,7 @@ namespace MailJet.Client.Tests
             //var result = _client.GetListRecipient();
             //var item = result.Data.First();
             //TODO: remove hardcoded test
-            var api = _client.GetListRecipient(ListName: "Test 07-03-2016 09:05:45");
+            var api = _client.GetListRecipient(listName: "Test 07-03-2016 09:05:45");
             Assert.IsNotNull(api);
             Assert.IsNotNull(api.Data);
             Assert.AreEqual(api.Count, api.Data.Count);
@@ -328,7 +328,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void ListRecipient_ByUnSub_False()
         {
-            var result = _client.GetListRecipient(Unsub: false);
+            var result = _client.GetListRecipient(unsub: false);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -338,7 +338,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void ListRecipient_ByUnSub_True()
         {
-            var result = _client.GetListRecipient(Unsub: true);
+            var result = _client.GetListRecipient(unsub: true);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.AreEqual(result.Count, result.Data.Count);

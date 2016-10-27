@@ -1,7 +1,5 @@
-﻿using MailJet.Client.Request;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Net.Mail;
 
 namespace MailJet.Client.Converters
@@ -15,7 +13,7 @@ namespace MailJet.Client.Converters
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var data = (MailAddress[])value;
+            MailAddress[] data = (MailAddress[])value;
 
             writer.WriteStartArray();
             foreach (MailAddress item in data)
@@ -23,7 +21,7 @@ namespace MailJet.Client.Converters
                 writer.WriteStartObject();
                 writer.WritePropertyName("Email");
                 writer.WriteValue(item.Address);
-                if (!String.IsNullOrWhiteSpace(item.DisplayName))
+                if (!string.IsNullOrWhiteSpace(item.DisplayName))
                 {
                     writer.WritePropertyName("Name");
                     writer.WriteValue(item.DisplayName);

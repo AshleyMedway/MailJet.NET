@@ -14,7 +14,7 @@ namespace MailJet.Client.Converters
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var data = (List<TKEYVALUELIST>)value;
+            List<TKEYVALUELIST> data = (List<TKEYVALUELIST>)value;
 
             writer.WriteStartObject();
             foreach (TKEYVALUELIST item in data)

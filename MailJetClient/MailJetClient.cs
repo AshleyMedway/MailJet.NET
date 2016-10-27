@@ -9,6 +9,7 @@ using RestSharp;
 using RestSharp.Authenticators;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -21,88 +22,92 @@ namespace MailJet.Client
         private readonly string _publicKey;
         private readonly string _privateKey;
 
-        public MailJetClient(string PublicKey, string PrivateKey)
+        public MailJetClient(string publicKey, string privateKey)
         {
-            _publicKey = PublicKey;
-            _privateKey = PrivateKey;
+            _publicKey = publicKey;
+            _privateKey = privateKey;
         }
 
-        public Response<ContactListData> CreateContactList(string Name)
+        public Func<RestRequest, RestRequest> RequestInterceptor { get; set; }
+
+        public Response<ContactListData> CreateContactList(string name)
         {
-            var request = new RestRequest("REST/contactslist", Method.POST);
-            request.AddParameter("name", Name, ParameterType.GetOrPost);
+            RestRequest request = new RestRequest("REST/contactslist", Method.POST);
+            request.AddParameter("name", name, ParameterType.GetOrPost);
             return ExecuteRequest<ContactListData>(request);
         }
 
         public Response<ContactListData> GetAllContactLists()
         {
-            var request = new RestRequest("REST/contactslist", Method.GET);
+            RestRequest request = new RestRequest("REST/contactslist", Method.GET);
             return ExecuteRequest<ContactListData>(request);
         }
 
-        public Response<ContactListData> GetContactList(long ID)
+        public Response<ContactListData> GetContactList(long id)
         {
-            var request = new RestRequest("REST/contactslist/{id}", Method.GET);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactslist/{id}", Method.GET);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             return ExecuteRequest<ContactListData>(request);
         }
 
-        public Response<ContactListData> GetContactList(string Address)
+        public Response<ContactListData> GetContactList(string address)
         {
-            var request = new RestRequest("REST/contactslist/{Address}", Method.GET);
-            request.AddParameter("Address", Address, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactslist/{Address}", Method.GET);
+            request.AddParameter("Address", address, ParameterType.UrlSegment);
             return ExecuteRequest<ContactListData>(request);
         }
 
-        public void DeleteContactList(string Address)
+        public void DeleteContactList(string address)
         {
-            var request = new RestRequest("REST/contactslist/{Address}", Method.DELETE);
-            request.AddParameter("Address", Address, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactslist/{Address}", Method.DELETE);
+            request.AddParameter("Address", address, ParameterType.UrlSegment);
             ExecuteRequest(request);
         }
 
-        public void DeleteContactList(long ID)
+        public void DeleteContactList(long id)
         {
-            var request = new RestRequest("REST/contactslist/{id}", Method.DELETE);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactslist/{id}", Method.DELETE);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             ExecuteRequest(request);
         }
 
-        public Response<ContactData> UpdateContactData(long ContactID, Dictionary<string, object> Data)
+        public Response<ContactData> UpdateContactData(long contactId, Dictionary<string, object> data)
         {
-            var request = new RestRequest("REST/contactdata/{id}", Method.PUT);
-            request.AddParameter("id", ContactID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactdata/{id}", Method.PUT);
+            request.AddParameter("id", contactId, ParameterType.UrlSegment);
 
-            var TData = TKEYVALUELIST.FromDictionary(Data);
-            var d = new { Data = TData };
+            List<TKEYVALUELIST> formattedData = TKEYVALUELIST.FromDictionary(data);
+            var d = new { Data = formattedData };
             request.AddJsonBody(d);
             return ExecuteRequest<ContactData>(request);
         }
 
-        public Response<ContactData> UpdateContactData(string Email, Dictionary<string, object> Data)
+        public Response<ContactData> UpdateContactData(string email, Dictionary<string, object> data)
         {
-            var request = new RestRequest("REST/contactdata/{email}", Method.PUT);
-            request.AddParameter("email", Email, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactdata/{email}", Method.PUT);
+            request.AddParameter("email", email, ParameterType.UrlSegment);
 
-            var TData = TKEYVALUELIST.FromDictionary(Data);
-            var d = new { Data = TData };
+            List<TKEYVALUELIST> formattedData = TKEYVALUELIST.FromDictionary(data);
+            var d = new { Data = formattedData };
             request.AddJsonBody(d);
             return ExecuteRequest<ContactData>(request);
         }
 
 
-        public Response<ContactResponse> CreateContactForList(long ID, Contact contact)
+        public Response<ContactResponse> CreateContactForList(long id, Contact contact)
         {
-            var request = new RestRequest("REST/contactslist/{id}/managecontact", Method.POST);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactslist/{id}/managecontact", Method.POST);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             request.JsonSerializer = NewtonsoftJsonSerializer.Default;
-            JObject o = new JObject();
-            o.Add("name", contact.Name);
-            o.Add("email", contact.Email);
-            o.Add("action", System.Enum.GetName(typeof(CreateContactAction), contact.Action));
+            JObject o = new JObject
+            {
+                {"name", contact.Name},
+                {"email", contact.Email},
+                {"action", System.Enum.GetName(typeof(CreateContactAction), contact.Action)}
+            };
 
             JObject p = new JObject();
-            foreach (var i in contact.Properties)
+            foreach (TKEYVALUELIST i in contact.Properties)
             {
                 p.Add(i.Name, JToken.FromObject(i.Value));
             }
@@ -115,109 +120,111 @@ namespace MailJet.Client
 
         public Response<ContactMetadata> GetContactMetaData()
         {
-            var request = new RestRequest("REST/contactmetadata", Method.GET);
+            RestRequest request = new RestRequest("REST/contactmetadata", Method.GET);
             return ExecuteRequest<ContactMetadata>(request);
         }
 
-        public Response<ContactMetadata> GetContactMetaData(long ID)
+        public Response<ContactMetadata> GetContactMetaData(long id)
         {
-            var request = new RestRequest("REST/contactmetadata/{id}", Method.GET);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactmetadata/{id}", Method.GET);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             return ExecuteRequest<ContactMetadata>(request);
         }
 
-        public Response<ContactMetadata> GetContactMetaData(string Name, ContactMetadataNameSpace NameSpace)
+        public Response<ContactMetadata> GetContactMetaData(string name, ContactMetadataNameSpace nameSpace)
         {
-            var request = new RestRequest("REST/contactmetadata/{namespace}|{name}", Method.GET);
-            request.AddParameter("name", Name, ParameterType.UrlSegment);
-            var @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), NameSpace);
+            RestRequest request = new RestRequest("REST/contactmetadata/{namespace}|{name}", Method.GET);
+            request.AddParameter("name", name, ParameterType.UrlSegment);
+            string @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), nameSpace);
             request.AddParameter("namespace", @namespace, ParameterType.UrlSegment);
 
             return ExecuteRequest<ContactMetadata>(request);
         }
 
-        public Response<ContactMetadata> CreateContactMetaData(ContactMetadata ContactMetadata)
+        public Response<ContactMetadata> CreateContactMetaData(ContactMetadata contactMetadata)
         {
-            if (ContactMetadata.Name.Any(x => x == ' '))
+            if (contactMetadata.Name.Any(x => x == ' '))
             {
                 throw new InvalidOperationException("Name cannot contain a space");
             }
-            var request = new RestRequest("REST/contactmetadata", Method.POST);
-            request.AddParameter("name", ContactMetadata.Name, ParameterType.GetOrPost);
+            RestRequest request = new RestRequest("REST/contactmetadata", Method.POST);
+            request.AddParameter("name", contactMetadata.Name, ParameterType.GetOrPost);
 
-            var @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), ContactMetadata.NameSpace);
+            string @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), contactMetadata.NameSpace);
             request.AddParameter("namespace", @namespace, ParameterType.GetOrPost);
 
-            var type = System.Enum.GetName(typeof(ContactMetadataDataType), ContactMetadata.Datatype);
+            string type = System.Enum.GetName(typeof(ContactMetadataDataType), contactMetadata.Datatype);
             request.AddParameter("datatype", type, ParameterType.GetOrPost);
 
             return ExecuteRequest<ContactMetadata>(request);
         }
 
-        public Response<ContactMetadata> UpdateContactMetaData(ContactMetadata ContactMetadata)
+        public Response<ContactMetadata> UpdateContactMetaData(ContactMetadata contactMetadata)
         {
-            if (ContactMetadata.Name.Any(x => x == ' '))
+            if (contactMetadata.Name.Any(x => x == ' '))
             {
                 throw new InvalidOperationException("Name cannot contain a space");
             }
 
-            var request = new RestRequest("REST/contactmetadata/{id}", Method.PUT);
-            request.AddParameter("id", ContactMetadata.ID, ParameterType.UrlSegment);
-            request.AddParameter("name", ContactMetadata.Name, ParameterType.GetOrPost);
+            RestRequest request = new RestRequest("REST/contactmetadata/{id}", Method.PUT);
+            request.AddParameter("id", contactMetadata.ID, ParameterType.UrlSegment);
+            request.AddParameter("name", contactMetadata.Name, ParameterType.GetOrPost);
 
-            var @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), ContactMetadata.NameSpace);
+            string @namespace = System.Enum.GetName(typeof(ContactMetadataNameSpace), contactMetadata.NameSpace);
             request.AddParameter("namespace", @namespace, ParameterType.GetOrPost);
 
-            var type = System.Enum.GetName(typeof(ContactMetadataDataType), ContactMetadata.Datatype);
+            string type = System.Enum.GetName(typeof(ContactMetadataDataType), contactMetadata.Datatype);
             request.AddParameter("datatype", type, ParameterType.GetOrPost);
 
             return ExecuteRequest<ContactMetadata>(request);
         }
 
-        public void DeleteContactMetaData(long ID)
+        public void DeleteContactMetaData(long id)
         {
-            var request = new RestRequest("REST/contactmetadata/{id}", Method.DELETE);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactmetadata/{id}", Method.DELETE);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             ExecuteRequest(request);
         }
 
-        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
+        public Response<DataItem> SendTemplateMessage(long templateId, MailAddress to, MailAddress from, string subject, Dictionary<string, object> parameters = null)
         {
-            return SendTemplateMessage(TemplateId, new MailAddress[] { To }, From, Subject, Parameters);
+            return SendTemplateMessage(templateId, new[] { to }, from, subject, parameters);
         }
 
-        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress[] To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
+        public Response<DataItem> SendTemplateMessage(long templateId, MailAddress[] to, MailAddress from, string subject, Dictionary<string, object> parameters = null)
         {
-            if (To == null || To.Any(x => String.IsNullOrWhiteSpace(x.Address)))
-                throw new ArgumentNullException("To", "You must specify the recipient address");
+            if (to == null || to.Any(x => string.IsNullOrWhiteSpace(x.Address)))
+                throw new ArgumentNullException(nameof(to), "You must specify the recipient address");
 
-            if (From == null || String.IsNullOrWhiteSpace(From.Address))
-                throw new ArgumentNullException("From", "You must specify the sender");
+            if (string.IsNullOrWhiteSpace(from?.Address))
+                throw new ArgumentNullException(nameof(from), "You must specify the sender");
 
-            if (String.IsNullOrWhiteSpace(Subject))
-                throw new ArgumentNullException("Subject", "You must specify the Subject");
+            if (string.IsNullOrWhiteSpace(subject))
+                throw new ArgumentNullException(nameof(subject), "You must specify the Subject");
 
-            var request = new RestRequest("send/message", Method.POST)
+            RestRequest request = new RestRequest("send/message", Method.POST)
             {
                 RequestFormat = DataFormat.Json,
                 JsonSerializer = NewtonsoftJsonSerializer.Default
             };
-            JObject o = new JObject();
+            JObject o = new JObject
+            {
+                {"MJ-TemplateID", templateId},
+                {"MJ-TemplateLanguage", true},
+                {"Subject", subject},
+                {"FromEmail", from.Address}
+            };
 
-            o.Add("MJ-TemplateID", TemplateId);
-            o.Add("MJ-TemplateLanguage", true);
-            o.Add("Subject", Subject);
-            o.Add("FromEmail", From.Address);
 
-            if (!String.IsNullOrWhiteSpace(From.DisplayName))
-                o.Add("FromName", From.DisplayName);
+            if (!string.IsNullOrWhiteSpace(from.DisplayName))
+                o.Add("FromName", from.DisplayName);
 
-            o.Add("Recipients", JToken.FromObject(To, NewtonsoftJsonSerializer.Default.Serializer));
+            o.Add("Recipients", JToken.FromObject(to, NewtonsoftJsonSerializer.Default.Serializer));
 
-            if (Parameters != null && Parameters.Any())
+            if (parameters != null && parameters.Any())
             {
                 JObject p = new JObject();
-                foreach (var i in Parameters)
+                foreach (KeyValuePair<string, object> i in parameters)
                 {
                     p.Add(i.Key, JToken.FromObject(i.Value));
                 }
@@ -229,20 +236,20 @@ namespace MailJet.Client
             return ExecuteRequest<DataItem>(request);
         }
 
-        public Response<DataItem> SendMessage(MailMessage Message)
+        public Response<DataItem> SendMessage(MailMessage message)
         {
-            var request = new RestRequest("send/message", Method.POST);
+            RestRequest request = new RestRequest("send/message", Method.POST);
 
-            if (Message.From == null)
+            if (message.From == null)
                 throw new InvalidOperationException("You must specify the from address. http://dev.mailjet.com/guides/send-api-guide/");
 
-            if (String.IsNullOrWhiteSpace(Message.Subject))
+            if (string.IsNullOrWhiteSpace(message.Subject))
                 throw new InvalidOperationException("You must specify the subject address. http://dev.mailjet.com/guides/send-api-guide/");
 
-            if (Message.Subject.Length > 255)
+            if (message.Subject.Length > 255)
                 throw new InvalidOperationException("The subject cannot be longer than 255 characters. http://dev.mailjet.com/guides/send-api-guide/");
 
-            var recipientsCount = Message.To.Count + Message.CC.Count + Message.Bcc.Count;
+            int recipientsCount = message.To.Count + message.CC.Count + message.Bcc.Count;
 
             if (recipientsCount == 0)
                 throw new InvalidOperationException("Must have at least one recipient. http://dev.mailjet.com/guides/send-api-guide/");
@@ -250,48 +257,45 @@ namespace MailJet.Client
             if (recipientsCount > 50)
                 throw new InvalidOperationException("Max Recipients is 50. http://dev.mailjet.com/guides/send-api-guide/");
 
-            if (String.IsNullOrWhiteSpace(Message.From.DisplayName))
-                request.AddParameter("from", Message.From.Address);
-            else
-                request.AddParameter("from", String.Format("{0} <{1}>", Message.From.DisplayName, Message.From.Address));
+            request.AddParameter("from",
+                string.IsNullOrWhiteSpace(message.From.DisplayName)
+                    ? message.From.Address
+                    : $"{message.From.DisplayName} <{message.From.Address}>");
 
-            request.AddParameter("subject", Message.Subject);
+            request.AddParameter("subject", message.Subject);
 
-            foreach (var address in Message.To)
+            foreach (MailAddress address in message.To)
             {
-                if (String.IsNullOrWhiteSpace(address.DisplayName))
-                    request.AddParameter("to", address.Address);
-                else
-                    request.AddParameter("to", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+                request.AddParameter("to",
+                    string.IsNullOrWhiteSpace(address.DisplayName)
+                        ? address.Address
+                        : $"\"{address.DisplayName}\" <{address.Address}>");
             }
 
-            foreach (var address in Message.CC)
+            foreach (MailAddress address in message.CC)
             {
-                if (String.IsNullOrWhiteSpace(address.DisplayName))
-                    request.AddParameter("cc", address.Address);
-                else
-                    request.AddParameter("cc", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+                request.AddParameter("cc",
+                    string.IsNullOrWhiteSpace(address.DisplayName)
+                        ? address.Address
+                        : $"\"{address.DisplayName}\" <{address.Address}>");
             }
 
-            foreach (var address in Message.Bcc)
+            foreach (MailAddress address in message.Bcc)
             {
-                if (String.IsNullOrWhiteSpace(address.DisplayName))
-                    request.AddParameter("bcc", address.Address);
-                else
-                    request.AddParameter("bcc", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+                request.AddParameter("bcc",
+                    string.IsNullOrWhiteSpace(address.DisplayName)
+                        ? address.Address
+                        : $"\"{address.DisplayName}\" <{address.Address}>");
             }
 
-            if (Message.IsBodyHtml)
-                request.AddParameter("html", Message.Body);
-            else
-                request.AddParameter("text", Message.Body);
+            request.AddParameter(message.IsBodyHtml ? "html" : "text", message.Body);
 
-            if (Message.Attachments.Any())
+            if (message.Attachments.Any())
             {
-                if (Message.Attachments.Sum(x => x.ContentStream.Length) > 15000000)
+                if (message.Attachments.Sum(x => x.ContentStream.Length) > 15000000)
                     throw new InvalidOperationException("Attachments cannot exceed 15MB. http://dev.mailjet.com/guides/send-api-guide/");
 
-                foreach (var item in Message.Attachments)
+                foreach (Attachment item in message.Attachments)
                 {
                     using (MemoryStream ms = new MemoryStream())
                     {
@@ -301,13 +305,13 @@ namespace MailJet.Client
                 }
             }
 
-            var view = Message.AlternateViews.FirstOrDefault();
+            AlternateView view = message.AlternateViews.FirstOrDefault();
 
-            if (view != null && view.LinkedResources != null && view.LinkedResources.Any())
+            if (view?.LinkedResources != null && view.LinkedResources.Any())
             {
-                foreach (var item in view.LinkedResources)
+                foreach (LinkedResource item in view.LinkedResources)
                 {
-                    using (var ms = new MemoryStream())
+                    using (MemoryStream ms = new MemoryStream())
                     {
                         item.ContentStream.CopyTo(ms);
                         request.AddFile("inlineattachment", ms.ToArray(), item.ContentId, item.ContentType.MediaType);
@@ -315,228 +319,228 @@ namespace MailJet.Client
                 }
             }
 
-            if (Message.Sender != null && !String.IsNullOrWhiteSpace(Message.Sender.Address))
+            if (!string.IsNullOrWhiteSpace(message.Sender?.Address))
                 throw new NotImplementedException("Sender Address not yet supported.");
 
             return ExecuteRequest<DataItem>(request);
         }
 
-        public Response<MessageData> GetMessageHistory(long MessageId)
+        public Response<MessageData> GetMessageHistory(long messageId)
         {
-            var request = new RestRequest("REST/messagehistory/{id}", Method.GET);
-            request.AddParameter("id", MessageId);
+            RestRequest request = new RestRequest("REST/messagehistory/{id}", Method.GET);
+            request.AddParameter("id", messageId);
             return ExecuteRequest<MessageData>(request);
         }
 
-        public Response<MessageData> GetMessage(long MessageId)
+        public Response<MessageData> GetMessage(long messageId)
         {
-            var request = new RestRequest("REST/message/{id}", Method.GET);
-            request.AddParameter("id", MessageId);
+            RestRequest request = new RestRequest("REST/message/{id}", Method.GET);
+            request.AddParameter("id", messageId);
             return ExecuteRequest<MessageData>(request);
         }
 
         /// <summary>
         /// Allows you to list and view the details of a Message (an e-mail) processed by Mailjet
         /// </summary>
-        /// <param name="Limit">Limit the number of results, default is 10</param>
-        /// <param name="ContactId">Only retrieve message resources for which Contact ID equals the specified value.</param>
-        /// <param name="CampaignId">Only retrieve message resources for which Campaign ID equals the specified value.</param>
-        /// <param name="DestinationId">Only retrieve message resources for which Destination ID equals the specified value.</param>
-        /// <param name="MessageStateId">Only show messages with this state.</param>
-        /// <param name="SenderId">Only show messages from this sender.</param>
+        /// <param name="limit">Limit the number of results, default is 10</param>
+        /// <param name="contactId">Only retrieve message resources for which Contact ID equals the specified value.</param>
+        /// <param name="campaignId">Only retrieve message resources for which Campaign ID equals the specified value.</param>
+        /// <param name="destinationId">Only retrieve message resources for which Destination ID equals the specified value.</param>
+        /// <param name="messageStateId">Only show messages with this state.</param>
+        /// <param name="senderId">Only show messages from this sender.</param>
         /// <returns></returns>
         public Response<MessageData> GetMessages(
-            int? Limit = null,
-            long? ContactId = null,
-            long? CampaignId = null,
-            long? DestinationId = null,
-            long? MessageStateId = null,
-            long? SenderId = null)
+            int? limit = null,
+            long? contactId = null,
+            long? campaignId = null,
+            long? destinationId = null,
+            long? messageStateId = null,
+            long? senderId = null)
         {
-            var request = new RestRequest("REST/message", Method.GET);
+            RestRequest request = new RestRequest("REST/message", Method.GET);
 
-            if (ContactId.HasValue)
-                request.AddQueryParameter("Contact", ContactId.Value.ToString());
+            if (contactId.HasValue)
+                request.AddQueryParameter("Contact", contactId.Value.ToString());
 
-            if (CampaignId.HasValue)
-                request.AddQueryParameter("Campaign", CampaignId.Value.ToString());
+            if (campaignId.HasValue)
+                request.AddQueryParameter("Campaign", campaignId.Value.ToString());
 
-            if (DestinationId.HasValue)
-                request.AddQueryParameter("Destination", DestinationId.Value.ToString());
+            if (destinationId.HasValue)
+                request.AddQueryParameter("Destination", destinationId.Value.ToString());
 
-            if (MessageStateId.HasValue)
-                request.AddQueryParameter("MessageState", MessageStateId.Value.ToString());
+            if (messageStateId.HasValue)
+                request.AddQueryParameter("MessageState", messageStateId.Value.ToString());
 
-            if (SenderId.HasValue)
-                request.AddQueryParameter("Sender", SenderId.Value.ToString());
+            if (senderId.HasValue)
+                request.AddQueryParameter("Sender", senderId.Value.ToString());
 
-            if (Limit.HasValue)
-                request.AddParameter("limit", Limit.Value);
+            if (limit.HasValue)
+                request.AddParameter("limit", limit.Value);
 
             return ExecuteRequest<MessageData>(request);
         }
 
-        public Response<DNSData> GetDNS(string Domain)
+        public Response<DNSData> GetDns(string domain)
         {
-            var request = new RestRequest("REST/dns/{domain}", Method.GET);
-            request.AddParameter("domain", Domain, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/dns/{domain}", Method.GET);
+            request.AddParameter("domain", domain, ParameterType.UrlSegment);
             return ExecuteRequest<DNSData>(request);
         }
 
-        public Response<DNSData> GetDNS(long RecordId)
+        public Response<DNSData> GetDns(long recordId)
         {
-            var request = new RestRequest("REST/dns/{id}", Method.GET);
-            request.AddParameter("id", RecordId);
+            RestRequest request = new RestRequest("REST/dns/{id}", Method.GET);
+            request.AddParameter("id", recordId);
             return ExecuteRequest<DNSData>(request);
         }
 
-        public Response<DNSData> GetDNS()
+        public Response<DNSData> GetDns()
         {
-            var request = new RestRequest("REST/dns", Method.GET);
+            RestRequest request = new RestRequest("REST/dns", Method.GET);
             return ExecuteRequest<DNSData>(request);
         }
 
-        public Response<DNSCheckData> ForceDNSRecheck(long RecordId)
+        public Response<DNSCheckData> ForceDnsRecheck(long recordId)
         {
-            var request = new RestRequest("REST/dns/{id}/check", Method.POST);
-            request.AddParameter("id", RecordId, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/dns/{id}/check", Method.POST);
+            request.AddParameter("id", recordId, ParameterType.UrlSegment);
             return ExecuteRequest<DNSCheckData>(request);
         }
 
         public Response<MetaSenderData> GetMetaSender()
         {
-            var request = new RestRequest("REST/metasender", Method.GET);
+            RestRequest request = new RestRequest("REST/metasender", Method.GET);
             return ExecuteRequest<MetaSenderData>(request);
         }
 
-        public Response<MetaSenderData> GetMetaSender(long SenderId)
+        public Response<MetaSenderData> GetMetaSender(long senderId)
         {
-            var request = new RestRequest("REST/metasender/{id}", Method.GET);
-            request.AddParameter("id", SenderId);
+            RestRequest request = new RestRequest("REST/metasender/{id}", Method.GET);
+            request.AddParameter("id", senderId);
             return ExecuteRequest<MetaSenderData>(request);
         }
 
-        public Response<MetaSenderData> GetMetaSender(string Email)
+        public Response<MetaSenderData> GetMetaSender(string email)
         {
-            var request = new RestRequest("REST/metasender/{email}", Method.GET);
-            request.AddParameter("email", Email, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/metasender/{email}", Method.GET);
+            request.AddParameter("email", email, ParameterType.UrlSegment);
             return ExecuteRequest<MetaSenderData>(request);
         }
 
-        public Response<TemplateData> GetTemplate(long ID)
+        public Response<TemplateData> GetTemplate(long id)
         {
-            var request = new RestRequest("REST/template/{id}", Method.GET);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/template/{id}", Method.GET);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             return ExecuteRequest<TemplateData>(request);
         }
 
         public Response<TemplateData> GetTemplate(string name)
         {
-            var request = new RestRequest("REST/template", Method.GET);
+            RestRequest request = new RestRequest("REST/template", Method.GET);
             request.AddParameter("name", name, ParameterType.QueryString);
             return ExecuteRequest<TemplateData>(request);
         }
 
-        public Response<TemplateContent> GetTemplateContent(long ID)
+        public Response<TemplateContent> GetTemplateContent(long id)
         {
-            var request = new RestRequest("REST/template/{id}/detailcontent", Method.GET);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/template/{id}/detailcontent", Method.GET);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             return ExecuteRequest<TemplateContent>(request);
         }
 
-        public Response<MetaSenderData> CreateMetaSender(string Email, string Description = null)
+        public Response<MetaSenderData> CreateMetaSender(string email, string description = null)
         {
-            var request = new RestRequest("REST/metasender", Method.POST);
-            request.AddParameter("email", Email);
-            if (!String.IsNullOrWhiteSpace(Description))
-                request.AddParameter("description", Description);
+            RestRequest request = new RestRequest("REST/metasender", Method.POST);
+            request.AddParameter("email", email);
+            if (!string.IsNullOrWhiteSpace(description))
+                request.AddParameter("description", description);
 
             return ExecuteRequest<MetaSenderData>(request);
         }
 
-        public Response<MetaSenderData> UpdateMetaSender(long SenderId, string Email = null, bool? IsEnabled = null, string Description = null)
+        public Response<MetaSenderData> UpdateMetaSender(long senderId, string email = null, bool? isEnabled = null, string description = null)
         {
-            var request = new RestRequest("REST/metasender/{id}", Method.PUT);
-            request.AddParameter("id", SenderId, ParameterType.UrlSegment);
-            if (!String.IsNullOrWhiteSpace(Email))
-                request.AddParameter("email", Email);
-            if (!String.IsNullOrWhiteSpace(Description))
-                request.AddParameter("description", Description);
-            if (IsEnabled.HasValue)
-                request.AddParameter("isEnabled", IsEnabled.Value);
+            RestRequest request = new RestRequest("REST/metasender/{id}", Method.PUT);
+            request.AddParameter("id", senderId, ParameterType.UrlSegment);
+            if (!string.IsNullOrWhiteSpace(email))
+                request.AddParameter("email", email);
+            if (!string.IsNullOrWhiteSpace(description))
+                request.AddParameter("description", description);
+            if (isEnabled.HasValue)
+                request.AddParameter("isEnabled", isEnabled.Value);
 
             return ExecuteRequest<MetaSenderData>(request);
         }
 
-        public Response<ContactData> GetContactData(long ID)
+        public Response<ContactData> GetContactData(long id)
         {
-            var request = new RestRequest("REST/contactdata/{id}", Method.GET);
-            request.AddParameter("id", ID, ParameterType.UrlSegment);
+            RestRequest request = new RestRequest("REST/contactdata/{id}", Method.GET);
+            request.AddParameter("id", id, ParameterType.UrlSegment);
             return ExecuteRequest<ContactData>(request);
         }
 
         /// <summary>
         /// Manage the relationship between a contact and a contactslists.
         /// </summary>
-        /// <param name="IsActive">Retrieve only list recipients for which the IsActive property matches the specified value.</param>
-        /// <param name="IsBlocked">Retrieve only list recipients for which the contact's IsBlocked property matches the specified value.</param>
-        /// <param name="ContactId">Only retrieve listrecipient resources for which Contact ID equals the specified value.</param>
-        /// <param name="ContactEmail">Retrieve only list recipients for which the contact's Email property matches the specified value.</param>
-        /// <param name="ContactsListId">Retrieve only list recipients for the specified contact list.</param>
-        /// <param name="IgnoreDeleted">Remove deleted contacts from the resultset.</param>
-        /// <param name="LastActivityAt">Timestamp of last registered activity for this ListRecipient.</param>
-        /// <param name="ListName">Retrieve only list recipients for the specified contact list.</param>
-        /// <param name="IsOpened">Retrieve only list recipients for which the contact has at least an opened email.</param>
-        /// <param name="Status">Retrieve only list recipients for the given status.</param>
-        /// <param name="Unsub">Retrieve only list recipients for which the IsUnsubscribed property matches the specified value.</param>
+        /// <param name="isActive">Retrieve only list recipients for which the IsActive property matches the specified value.</param>
+        /// <param name="isBlocked">Retrieve only list recipients for which the contact's IsBlocked property matches the specified value.</param>
+        /// <param name="contactId">Only retrieve listrecipient resources for which Contact ID equals the specified value.</param>
+        /// <param name="contactEmail">Retrieve only list recipients for which the contact's Email property matches the specified value.</param>
+        /// <param name="contactsListId">Retrieve only list recipients for the specified contact list.</param>
+        /// <param name="ignoreDeleted">Remove deleted contacts from the resultset.</param>
+        /// <param name="lastActivityAt">Timestamp of last registered activity for this ListRecipient.</param>
+        /// <param name="listName">Retrieve only list recipients for the specified contact list.</param>
+        /// <param name="isOpened">Retrieve only list recipients for which the contact has at least an opened email.</param>
+        /// <param name="status">Retrieve only list recipients for the given status.</param>
+        /// <param name="unsub">Retrieve only list recipients for which the IsUnsubscribed property matches the specified value.</param>
         /// <returns></returns>
         public Response<ListRecipient> GetListRecipient(
-            bool? IsActive = null,
-            bool? IsBlocked = null,
-            long? ContactId = null,
-            string ContactEmail = null,
-            long? ContactsListId = null,
-            bool? IgnoreDeleted = null,
-            DateTime? LastActivityAt = null,
-            string ListName = null,
-            bool? IsOpened = null,
-            string Status = null,
-            bool? Unsub = null)
+            bool? isActive = null,
+            bool? isBlocked = null,
+            long? contactId = null,
+            string contactEmail = null,
+            long? contactsListId = null,
+            bool? ignoreDeleted = null,
+            DateTime? lastActivityAt = null,
+            string listName = null,
+            bool? isOpened = null,
+            string status = null,
+            bool? unsub = null)
         {
-            var request = new RestRequest("REST/listrecipient", Method.GET);
+            RestRequest request = new RestRequest("REST/listrecipient", Method.GET);
 
-            if (IsActive.HasValue)
-                request.AddQueryParameter("Active", IsActive.Value.ToString());
+            if (isActive.HasValue)
+                request.AddQueryParameter("Active", isActive.Value.ToString());
 
-            if (IsBlocked.HasValue)
-                request.AddQueryParameter("Blocked", IsBlocked.Value.ToString());
+            if (isBlocked.HasValue)
+                request.AddQueryParameter("Blocked", isBlocked.Value.ToString());
 
-            if (ContactId.HasValue)
-                request.AddQueryParameter("Contact", ContactId.Value.ToString());
+            if (contactId.HasValue)
+                request.AddQueryParameter("Contact", contactId.Value.ToString());
 
-            if (!String.IsNullOrWhiteSpace(ContactEmail))
-                request.AddQueryParameter("ContactEmail", ContactEmail);
+            if (!string.IsNullOrWhiteSpace(contactEmail))
+                request.AddQueryParameter("ContactEmail", contactEmail);
 
-            if (ContactsListId.HasValue)
-                request.AddQueryParameter("ContactsList", ContactsListId.Value.ToString());
+            if (contactsListId.HasValue)
+                request.AddQueryParameter("ContactsList", contactsListId.Value.ToString());
 
-            if (IgnoreDeleted.HasValue)
-                request.AddQueryParameter("IgnoreDeleted", IgnoreDeleted.Value.ToString());
+            if (ignoreDeleted.HasValue)
+                request.AddQueryParameter("IgnoreDeleted", ignoreDeleted.Value.ToString());
 
-            if (LastActivityAt.HasValue)
-                request.AddQueryParameter("LastActivityAt", LastActivityAt.Value.ToString());
+            if (lastActivityAt.HasValue)
+                request.AddQueryParameter("LastActivityAt", lastActivityAt.Value.ToString(CultureInfo.InvariantCulture));
 
-            if (!String.IsNullOrWhiteSpace(ListName))
-                request.AddQueryParameter("ListName", ListName);
+            if (!string.IsNullOrWhiteSpace(listName))
+                request.AddQueryParameter("ListName", listName);
 
-            if (IsOpened.HasValue)
-                request.AddQueryParameter("Opened", IsOpened.Value.ToString());
+            if (isOpened.HasValue)
+                request.AddQueryParameter("Opened", isOpened.Value.ToString());
 
-            if (!String.IsNullOrWhiteSpace(Status))
-                request.AddQueryParameter("Status", Status);
+            if (!string.IsNullOrWhiteSpace(status))
+                request.AddQueryParameter("Status", status);
 
-            if (Unsub.HasValue)
-                request.AddQueryParameter("Unsub", Unsub.Value.ToString());
+            if (unsub.HasValue)
+                request.AddQueryParameter("Unsub", unsub.Value.ToString());
 
             return ExecuteRequest<ListRecipient>(request);
         }
@@ -544,17 +548,17 @@ namespace MailJet.Client
         /// <summary>
         /// Get aggregate graph statistics available for this apikey.
         /// </summary>
-        /// <param name="CampaignAggregateID">Only show statistics for this aggregation.</param>
-        /// <param name="Range">The period of the aggregates (24 hours or 7 days).</param>
+        /// <param name="campaignAggregateId">Only show statistics for this aggregation.</param>
+        /// <param name="range">The period of the aggregates (24 hours or 7 days).</param>
         /// <returns>Aggregated campaign statistics grouped over intervals.</returns>
-        public Response<AggregateGraphStatistics> GetAggregateGraphStatistics(int? CampaignAggregateID = null, string Range = null) {
-          var request = new RestRequest("REST/aggregategraphstatistics", Method.GET);
+        public Response<AggregateGraphStatistics> GetAggregateGraphStatistics(int? campaignAggregateId = null, string range = null) {
+          RestRequest request = new RestRequest("REST/aggregategraphstatistics", Method.GET);
 
-          if (CampaignAggregateID.HasValue)
-            request.AddParameter("CampaignAggregateID", CampaignAggregateID.Value);
+          if (campaignAggregateId.HasValue)
+            request.AddParameter("CampaignAggregateID", campaignAggregateId.Value);
 
-          if (!String.IsNullOrWhiteSpace(Range))
-            request.AddParameter("Range", Range);
+          if (!string.IsNullOrWhiteSpace(range))
+            request.AddParameter("Range", range);
 
           return ExecuteRequest<AggregateGraphStatistics>(request);
         }
@@ -563,16 +567,16 @@ namespace MailJet.Client
         {
             request.RequestFormat = DataFormat.Json;
             request.JsonSerializer = NewtonsoftJsonSerializer.Default;
-            var result = WebClient.Execute(request);
+            IRestResponse result = WebClient.Execute(request);
 
             if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
                 return null;
 
-            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
-            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
-                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+            ErrorResponse error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
+            if (!string.IsNullOrWhiteSpace(error.ErrorInfo) || !string.IsNullOrWhiteSpace(error.ErrorMessage))
+                throw new Exception($"{error.ErrorMessage}\n{error.ErrorMessage}");
 
-            var data = JsonConvert.DeserializeObject<Response<T>>(result.Content);
+            Response<T> data = JsonConvert.DeserializeObject<Response<T>>(result.Content);
             return data;
         }
 
@@ -580,21 +584,23 @@ namespace MailJet.Client
         {
             request.RequestFormat = DataFormat.Json;
             request.JsonSerializer = NewtonsoftJsonSerializer.Default;
-            var result = WebClient.Execute(request);
+            if (RequestInterceptor != null)
+                request = RequestInterceptor(request);
+            IRestResponse result = WebClient.Execute(request);
 
             if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.NoContent)
                 return;
 
-            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
-            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
-                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+            ErrorResponse error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
+            if (!string.IsNullOrWhiteSpace(error.ErrorInfo) || !string.IsNullOrWhiteSpace(error.ErrorMessage))
+                throw new Exception($"{error.ErrorMessage}\n{error.ErrorMessage}");
         }
 
         private RestClient WebClient
         {
             get
             {
-                var client = new RestClient("https://api.mailjet.com/v3")
+                RestClient client = new RestClient("https://api.mailjet.com/v3")
                 {
                     Authenticator = new HttpBasicAuthenticator(_publicKey, _privateKey),
                     UserAgent = "MailJet.NET Client"
