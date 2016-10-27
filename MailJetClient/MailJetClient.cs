@@ -567,6 +567,8 @@ namespace MailJet.Client
         {
             request.RequestFormat = DataFormat.Json;
             request.JsonSerializer = NewtonsoftJsonSerializer.Default;
+            if (RequestInterceptor != null)
+                request = RequestInterceptor(request);
             IRestResponse result = WebClient.Execute(request);
 
             if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
