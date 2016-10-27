@@ -52,7 +52,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetMessagesFilterByContact_Test()
         {
-            var result = _client.GetMessages(ContactId: 1);
+            var result = _client.GetMessages(contactId: 1);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -62,7 +62,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetMessagesFilterByCampaign_Test()
         {
-            var result = _client.GetMessages(CampaignId: 1);
+            var result = _client.GetMessages(campaignId: 1);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -72,7 +72,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetMessagesFilterByDestination_Test()
         {
-            var result = _client.GetMessages(DestinationId: 42);
+            var result = _client.GetMessages(destinationId: 42);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -82,7 +82,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetMessagesFilterByMessageState_Test()
         {
-            var result = _client.GetMessages(MessageStateId: 0);
+            var result = _client.GetMessages(messageStateId: 0);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -93,7 +93,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetMessagesFilterBySender_Test()
         {
-            var result = _client.GetMessages(SenderId: 3);
+            var result = _client.GetMessages(senderId: 3);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -103,7 +103,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetMessagesFilterChangeLimit_Increase()
         {
-            var result = _client.GetMessages(Limit: 20);
+            var result = _client.GetMessages(limit: 20);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
@@ -114,7 +114,7 @@ namespace MailJet.Client.Tests
         [Test]
         public void GetMessagesFilterChangeLimit_Decrease()
         {
-            var result = _client.GetMessages(Limit: 3);
+            var result = _client.GetMessages(limit: 3);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data.Any());
             Assert.AreEqual(result.Count, result.Data.Count);
