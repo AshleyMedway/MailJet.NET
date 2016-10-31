@@ -186,6 +186,8 @@ namespace MailJet.Client
             return SendTemplateMessage(TemplateId, new MailAddress[] { To }, From, Subject, Parameters);
         }
 
+        public String TemplateErrorReporting { get; set; }
+
         public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress[] To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
         {
             if (To == null || To.Any(x => String.IsNullOrWhiteSpace(x.Address)))
@@ -206,6 +208,9 @@ namespace MailJet.Client
 
             o.Add("MJ-TemplateID", TemplateId);
             o.Add("MJ-TemplateLanguage", true);
+            if (!String.IsNullOrWhiteSpace(TemplateErrorReporting))
+                o.Add("MJ-TemplateErrorReporting", TemplateErrorReporting);
+
             o.Add("Subject", Subject);
             o.Add("FromEmail", From.Address);
 
