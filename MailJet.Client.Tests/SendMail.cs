@@ -45,6 +45,10 @@ namespace MailJet.Client.Tests
                 new Dictionary<string, object>()
                 {
                     { "FirstName", "Test User Param" }
+                },
+                new Dictionary<string, string>()
+                {
+                   {"Mj-CustomID", "ID123"}
                 });
         }
 

@@ -181,14 +181,14 @@ namespace MailJet.Client
             ExecuteRequest(request);
         }
 
-        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
+        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null, Dictionary<string, string> Properties = null)
         {
-            return SendTemplateMessage(TemplateId, new MailAddress[] { To }, From, Subject, Parameters);
+            return SendTemplateMessage(TemplateId, new MailAddress[] { To }, From, Subject, Parameters, Properties);
         }
 
         public String TemplateErrorReporting { get; set; }
 
-        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress[] To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null)
+        public Response<DataItem> SendTemplateMessage(long TemplateId, MailAddress[] To, MailAddress From, string Subject, Dictionary<string, object> Parameters = null, Dictionary<string, string> Properties = null)
         {
             if (To == null || To.Any(x => String.IsNullOrWhiteSpace(x.Address)))
                 throw new ArgumentNullException("To", "You must specify the recipient address");
@@ -218,6 +218,14 @@ namespace MailJet.Client
                 o.Add("FromName", From.DisplayName);
 
             o.Add("Recipients", JToken.FromObject(To, NewtonsoftJsonSerializer.Default.Serializer));
+
+            if (Properties != null && Properties.Any())
+            {
+                foreach (var p in Properties)
+                {
+                    o.Add(p.Key, p.Value);
+                }
+            }
 
             if (Parameters != null && Parameters.Any())
             {
