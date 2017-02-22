@@ -4,3 +4,4 @@ obj
 *.userprefs
 *.suo
 .vs
+/MailJet.Client.Tests/MailJet.Client.Tests.csproj.user

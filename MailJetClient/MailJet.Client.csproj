@@ -28,6 +28,10 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MimeTypeMap, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MediaTypeMap.2.1.0.0\lib\net40\MimeTypeMap.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
       <Private>True</Private>
@@ -62,6 +66,7 @@
     <Compile Include="Response\Data\MessageData.cs" />
     <Compile Include="Enum\MessageStatus.cs" />
     <Compile Include="Response\Data\MetaSenderData.cs" />
+    <Compile Include="Response\Data\SentMessageData.cs" />
     <Compile Include="Response\Data\TemplateContent.cs" />
     <Compile Include="Response\Data\TemplateData.cs" />
     <Compile Include="Response\ErrorResponse.cs" />

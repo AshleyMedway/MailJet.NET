@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using MimeTypes;
 
 namespace MailJet.Client
 {
@@ -234,9 +235,15 @@ namespace MailJet.Client
             return ExecuteRequest<DataItem>(request);
         }
 
-        public Response<DataItem> SendMessage(MailMessage Message)
+        public SentMessageData SendMessage(MailMessage Message)
         {
-            var request = new RestRequest("send/message", Method.POST);
+            var request = new RestRequest("send/message", Method.POST)
+            {
+                RequestFormat = DataFormat.Json,
+                JsonSerializer = NewtonsoftJsonSerializer.Default
+            };
+
+            JObject message = new JObject();
 
             if (Message.From == null)
                 throw new InvalidOperationException("You must specify the from address. http://dev.mailjet.com/guides/send-api-guide/");
@@ -256,74 +263,117 @@ namespace MailJet.Client
                 throw new InvalidOperationException("Max Recipients is 50. http://dev.mailjet.com/guides/send-api-guide/");
 
             if (String.IsNullOrWhiteSpace(Message.From.DisplayName))
-                request.AddParameter("from", Message.From.Address);
+            {
+                message.Add("FromEmail", Message.From.Address);
+            }
             else
-                request.AddParameter("from", String.Format("{0} <{1}>", Message.From.DisplayName, Message.From.Address));
+            {
+                message.Add("FromEmail", Message.From.Address);
+                message.Add("FromName", Message.From.DisplayName);
+            }
 
-            request.AddParameter("subject", Message.Subject);
+            message.Add("Subject", Message.Subject);
 
+            string to = "";
             foreach (var address in Message.To)
             {
                 if (String.IsNullOrWhiteSpace(address.DisplayName))
-                    request.AddParameter("to", address.Address);
+                {
+                    to += address.Address + ",";
+                }
                 else
-                    request.AddParameter("to", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+                {
+                    to += String.Format("{0} <{1}>,", address.DisplayName, address.Address);
+                }
             }
+            message.Add("To", to);
 
+            string cc = "";
             foreach (var address in Message.CC)
             {
                 if (String.IsNullOrWhiteSpace(address.DisplayName))
-                    request.AddParameter("cc", address.Address);
+                {
+                    cc += address.Address + ",";
+                }
                 else
-                    request.AddParameter("cc", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+                {
+                    cc += String.Format("{0} <{1}>,", address.DisplayName, address.Address);
+                }
             }
 
+            if (!String.IsNullOrWhiteSpace(cc))
+                message.Add("CC", cc);
+
+            string bcc = "";
             foreach (var address in Message.Bcc)
             {
                 if (String.IsNullOrWhiteSpace(address.DisplayName))
-                    request.AddParameter("bcc", address.Address);
+                {
+                    bcc += address.Address + ",";
+                }
                 else
-                    request.AddParameter("bcc", String.Format("\"{0}\" <{1}>", address.DisplayName, address.Address));
+                {
+                    bcc += String.Format("{0} <{1}>,", address.DisplayName, address.Address);
+                }
             }
 
+            if (!String.IsNullOrWhiteSpace(bcc))
+                message.Add("Bcc", bcc);
+
             if (Message.IsBodyHtml)
-                request.AddParameter("html", Message.Body);
+                message.Add("Html-part", Message.Body);
             else
-                request.AddParameter("text", Message.Body);
+                message.Add("Text-part", Message.Body);
 
             if (Message.Attachments.Any())
             {
                 if (Message.Attachments.Sum(x => x.ContentStream.Length) > 15000000)
                     throw new InvalidOperationException("Attachments cannot exceed 15MB. http://dev.mailjet.com/guides/send-api-guide/");
 
+                JArray attachments = new JArray();
                 foreach (var item in Message.Attachments)
                 {
                     using (MemoryStream ms = new MemoryStream())
                     {
                         item.ContentStream.CopyTo(ms);
-                        request.AddFile("attachment", ms.ToArray(), item.Name);
+                        JObject attachment = new JObject();
+                        attachment.Add("Content-type", new JValue(MimeTypeMap.GetMimeType(Path.GetExtension(item.Name))));
+                        attachment.Add("Filename", new JValue(item.Name));
+                        string file = Convert.ToBase64String(ms.ToArray());
+                        attachment.Add("content", new JValue(file));
+                        attachments.Add(attachment);
                     }
                 }
+                message.Add("Attachments", attachments);
             }
 
             var view = Message.AlternateViews.FirstOrDefault();
 
             if (view != null && view.LinkedResources != null && view.LinkedResources.Any())
             {
+                JArray attachments = new JArray();
                 foreach (var item in view.LinkedResources)
                 {
                     using (var ms = new MemoryStream())
                     {
                         item.ContentStream.CopyTo(ms);
-                        request.AddFile("inlineattachment", ms.ToArray(), item.ContentId, item.ContentType.MediaType);
+                        JObject attachment = new JObject();
+                        attachment.Add("Content-type", new JValue(MimeTypeMap.GetMimeType(Path.GetExtension(item.ContentId))));
+                        attachment.Add("Filename", new JValue(item.ContentId));
+                        string file = Convert.ToBase64String(ms.ToArray());
+                        attachment.Add("content", new JValue(file));
+                        attachments.Add(attachment);
                     }
                 }
+                message.Add("Inline_attachments", attachments);
             }
 
             if (Message.Sender != null && !String.IsNullOrWhiteSpace(Message.Sender.Address))
                 throw new NotImplementedException("Sender Address not yet supported.");
 
-            return ExecuteRequest<DataItem>(request);
+            request.AddJsonBody(message);
+
+            return SendMessage(request);
         }
 
         public Response<MessageData> GetMessageHistory(long MessageId)
@@ -552,22 +602,24 @@ namespace MailJet.Client
         /// <param name="CampaignAggregateID">Only show statistics for this aggregation.</param>
         /// <param name="Range">The period of the aggregates (24 hours or 7 days).</param>
         /// <returns>Aggregated campaign statistics grouped over intervals.</returns>
-        public Response<AggregateGraphStatistics> GetAggregateGraphStatistics(int? CampaignAggregateID = null, string Range = null) {
-          var request = new RestRequest("REST/aggregategraphstatistics", Method.GET);
+        public Response<AggregateGraphStatistics> GetAggregateGraphStatistics(int? CampaignAggregateID = null, string Range = null)
+        {
+            var request = new RestRequest("REST/aggregategraphstatistics", Method.GET);
 
-          if (CampaignAggregateID.HasValue)
-            request.AddParameter("CampaignAggregateID", CampaignAggregateID.Value);
+            if (CampaignAggregateID.HasValue)
+                request.AddParameter("CampaignAggregateID", CampaignAggregateID.Value);
 
-          if (!String.IsNullOrWhiteSpace(Range))
-            request.AddParameter("Range", Range);
+            if (!String.IsNullOrWhiteSpace(Range))
+                request.AddParameter("Range", Range);
 
-          return ExecuteRequest<AggregateGraphStatistics>(request);
+            return ExecuteRequest<AggregateGraphStatistics>(request);
         }
 
         private Response<T> ExecuteRequest<T>(RestRequest request) where T : DataItem
         {
             request.RequestFormat = DataFormat.Json;
             request.JsonSerializer = NewtonsoftJsonSerializer.Default;
+
             var result = WebClient.Execute(request);
 
             if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
@@ -578,6 +630,24 @@ namespace MailJet.Client
                 throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
 
             var data = JsonConvert.DeserializeObject<Response<T>>(result.Content);
+            return data;
+        }
+
+        private SentMessageData SendMessage(RestRequest request)
+        {
+            request.RequestFormat = DataFormat.Json;
+            request.JsonSerializer = NewtonsoftJsonSerializer.Default;
+
+            var result = WebClient.Execute(request);
+
+            if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
+                return null;
+
+            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
+            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
+                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+
+            var data = JsonConvert.DeserializeObject<SentMessageData>(result.Content);
             return data;
         }
 

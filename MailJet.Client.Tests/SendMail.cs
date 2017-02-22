@@ -1,10 +1,7 @@
-﻿using MailJet.Client.Response;
-using MailJet.Client.Response.Data;
+﻿using MailJet.Client.Response.Data;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Net.Mail;
 using System.Net.Mime;
@@ -52,27 +49,22 @@ namespace MailJet.Client.Tests
         public void MailMessage_Html_WithInlineAttachements()
         {
             var message = BaseMessage();
-            var body = "<html><head></head><body><img src=\"cid:test.jpg\"/></body></html>";
+            var body = "<h3>test<img src=\"cid:test.jpg\"/></h3>";
             message.Body = body;
             message.IsBodyHtml = true;
             var view = AlternateView.CreateAlternateViewFromString(body, null, MediaTypeNames.Text.Html);
-            Response<DataItem> result;
-            using (var bmp = new Bitmap(128, 128))
+            var path = Path.Combine(Environment.CurrentDirectory, "TestData", "TestImage.jpg");
+            SentMessageData result;
+
+            using (var s = File.OpenRead(path))
             {
-                using (var g = Graphics.FromImage(bmp))
-                {
-                    using (var s = new MemoryStream())
-                    {
-                        g.FillRectangle(new SolidBrush(Color.Black), new Rectangle(0, 0, 128, 128));
-                        bmp.Save(s, ImageFormat.Jpeg);
-                        view.LinkedResources.Add(new LinkedResource(s, MediaTypeNames.Image.Jpeg) { ContentId = "test.jpg" });
-                        message.AlternateViews.Add(view);
-                        result = _client.SendMessage(message);
-                    }
-                }
+                view.LinkedResources.Add(new LinkedResource(s, MediaTypeNames.Image.Jpeg) { ContentId = "test.jpg" });
+                message.AlternateViews.Add(view);
+                result = _client.SendMessage(message);
             }
+
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(1, result.Sent.Length);
         }
 
         [Test]
@@ -82,7 +74,7 @@ namespace MailJet.Client.Tests
             message.Body = "test";
             var result = _client.SendMessage(message);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(1, result.Sent.Length);
         }
 
         [Test]
@@ -102,19 +94,20 @@ namespace MailJet.Client.Tests
             message.Body = "test";
             var result = _client.SendMessage(message);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(1, result.Sent.Length);
         }
 
         [Test]
         public void MailMessage_Text_WithAttachements()
         {
             var message = BaseMessage();
+            message.Subject = "Test with attachment";
             message.Body = "test";
             var path = Path.Combine(Environment.CurrentDirectory, "TestData", "TextFile.txt");
             message.Attachments.Add(new Attachment(path));
             var result = _client.SendMessage(message);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(1, result.Sent.Length);
         }
 
         [Test]
@@ -125,7 +118,7 @@ namespace MailJet.Client.Tests
             message.IsBodyHtml = true;
             var result = _client.SendMessage(message);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(1, result.Sent.Length);
         }
 
         private string FromAddress
