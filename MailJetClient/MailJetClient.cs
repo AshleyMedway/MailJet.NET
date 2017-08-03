@@ -651,6 +651,9 @@ namespace MailJet.Client
             if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
                 return null;
 
+            if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.Unauthorized)
+                throw new UnauthorizedAccessException("MailJet returned an HTTP 401 exception, please check your credentials");
+
             var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
             if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
                 throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
