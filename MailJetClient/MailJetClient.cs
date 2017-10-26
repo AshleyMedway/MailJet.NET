@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using MimeTypes;
+using System.Web;
 
 namespace MailJet.Client
 {
@@ -633,9 +634,7 @@ namespace MailJet.Client
             if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
                 return null;
 
-            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
-            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
-                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+            ProcessWebResponse(result);
 
             var data = JsonConvert.DeserializeObject<Response<T>>(result.Content);
             return data;
@@ -651,12 +650,7 @@ namespace MailJet.Client
             if (result.ResponseStatus == ResponseStatus.Completed && (result.StatusCode == HttpStatusCode.NoContent))
                 return null;
 
-            if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.Unauthorized)
-                throw new UnauthorizedAccessException("MailJet returned an HTTP 401 exception, please check your credentials");
-
-            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
-            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
-                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+            ProcessWebResponse(result);
 
             var data = JsonConvert.DeserializeObject<SentMessageData>(result.Content);
             return data;
@@ -671,9 +665,27 @@ namespace MailJet.Client
             if (result.ResponseStatus == ResponseStatus.Completed && result.StatusCode == HttpStatusCode.NoContent)
                 return;
 
-            var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
-            if (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage))
-                throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+            ProcessWebResponse(result);
+        }
+
+        private void ProcessWebResponse(IRestResponse result)
+        {
+            if (result.StatusCode == HttpStatusCode.Unauthorized)
+                throw new UnauthorizedAccessException("MailJet returned an HTTP 401 exception, please check your credentials");
+
+            if (result.StatusCode >= HttpStatusCode.BadRequest)
+                throw new HttpException((int)result.StatusCode, result.StatusCode.ToString());
+
+            if (result.ErrorMessage != null && String.IsNullOrWhiteSpace(result.Content))
+            {
+                throw new Exception(result.ErrorMessage);
+            }
+            else
+            {
+                var error = JsonConvert.DeserializeObject<ErrorResponse>(result.Content);
+                if ((error != null) && (!String.IsNullOrWhiteSpace(error.ErrorInfo) || !String.IsNullOrWhiteSpace(error.ErrorMessage)))
+                    throw new Exception(String.Format("{0}\n{1}", error.ErrorMessage, error.ErrorMessage));
+            }
         }
 
         private RestClient WebClient
